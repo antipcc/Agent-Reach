@@ -1,0 +1,65 @@
+import Foundation
+
+/// Where the real models live. Ships empty — fill it in (or drop an
+/// `AIConfig.plist` into the app bundle) and the app switches off the mocks.
+///
+/// Each path is optional on purpose: wire up try-on first and leave the rest
+/// mocked if that is the order you get vendors approved in.
+public struct AIConfig: Codable, Sendable, Equatable {
+    public var baseURL: URL?
+    public var apiKey: String?
+
+    public var backgroundRemovalPath: String?
+    public var garmentExtractionPath: String?
+    public var tryOnPath: String?
+    public var spinPath: String?
+
+    /// Seconds to allow a single request before giving up.
+    public var timeout: TimeInterval
+    /// How many times to retry a failed request (exponential backoff).
+    public var maxRetries: Int
+
+    public init(
+        baseURL: URL? = nil,
+        apiKey: String? = nil,
+        backgroundRemovalPath: String? = nil,
+        garmentExtractionPath: String? = nil,
+        tryOnPath: String? = nil,
+        spinPath: String? = nil,
+        timeout: TimeInterval = 120,
+        maxRetries: Int = 2
+    ) {
+        self.baseURL = baseURL
+        self.apiKey = apiKey
+        self.backgroundRemovalPath = backgroundRemovalPath
+        self.garmentExtractionPath = garmentExtractionPath
+        self.tryOnPath = tryOnPath
+        self.spinPath = spinPath
+        self.timeout = timeout
+        self.maxRetries = maxRetries
+    }
+
+    public static let empty = AIConfig()
+
+    /// A base URL alone is not enough — without a key every call would 401.
+    public var isConfigured: Bool {
+        guard baseURL != nil, let apiKey, !apiKey.isEmpty else { return false }
+        return backgroundRemovalPath != nil
+            || garmentExtractionPath != nil
+            || tryOnPath != nil
+            || spinPath != nil
+    }
+
+    /// Reads `WOO_AI_BASE_URL` / `WOO_AI_API_KEY` / `WOO_AI_*_PATH`, so a
+    /// scheme in Xcode can point the app at staging without a code change.
+    public static func fromEnvironment(_ environment: [String: String] = ProcessInfo.processInfo.environment) -> AIConfig {
+        AIConfig(
+            baseURL: environment["WOO_AI_BASE_URL"].flatMap(URL.init(string:)),
+            apiKey: environment["WOO_AI_API_KEY"],
+            backgroundRemovalPath: environment["WOO_AI_CUTOUT_PATH"],
+            garmentExtractionPath: environment["WOO_AI_GARMENTS_PATH"],
+            tryOnPath: environment["WOO_AI_TRYON_PATH"],
+            spinPath: environment["WOO_AI_SPIN_PATH"]
+        )
+    }
+}
