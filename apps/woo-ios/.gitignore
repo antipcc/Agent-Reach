@@ -1,0 +1,10 @@
+# Generated from project.yml — run ./bootstrap.sh
+Woo.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+.build/
+DerivedData/
+.swiftpm/
+
+# Real model endpoints and keys never belong in the repo
+Woo/AIConfig.plist
