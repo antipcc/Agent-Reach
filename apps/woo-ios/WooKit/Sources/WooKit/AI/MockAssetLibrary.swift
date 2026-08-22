@@ -32,7 +32,7 @@ public struct EchoMockAssets: MockAssetLibrary {
     }
 }
 
-/// How long mock work pretends to take. Tests use `.none` and run instantly.
+/// How long mock work pretends to take. Tests use `.instant`.
 public struct MockLatency: Sendable {
     /// Total wall time a job should occupy.
     public var duration: Duration
@@ -47,7 +47,7 @@ public struct MockLatency: Sendable {
     /// Long enough for the progress UI to be legible, short enough to demo.
     public static let realistic = MockLatency(duration: .seconds(6), steps: 40)
     public static let fast = MockLatency(duration: .milliseconds(600), steps: 12)
-    public static let none = MockLatency(duration: .zero, steps: 4)
+    public static let instant = MockLatency(duration: .zero, steps: 4)
 
     var stepDuration: Duration {
         guard steps > 0 else { return .zero }

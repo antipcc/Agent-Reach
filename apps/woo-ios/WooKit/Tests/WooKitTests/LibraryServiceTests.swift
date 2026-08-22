@@ -7,7 +7,7 @@ final class LibraryServiceTests: XCTestCase {
     private func makeService() -> LibraryService {
         LibraryService(
             store: InMemoryOutfitStore(),
-            provider: .mock(latency: .none),
+            provider: .mock(latency: .instant),
             palette: StubPalette()
         )
     }

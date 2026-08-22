@@ -6,7 +6,7 @@ final class MockProviderTests: XCTestCase {
 
     func testTryOnReportsProgressThatOnlyEverMovesForwardAndEndsAtOne() async throws {
         let recorder = ProgressRecorder()
-        let service = MockTryOnService(latency: .none)
+        let service = MockTryOnService(latency: .instant)
 
         _ = try await service.tryOn(person: photo, garments: [photo], progress: recorder.handler)
 
@@ -17,7 +17,7 @@ final class MockProviderTests: XCTestCase {
     }
 
     func testTryOnRefusesAnEmptySelectionInsteadOfReturningThePersonUnchanged() async {
-        let service = MockTryOnService(latency: .none)
+        let service = MockTryOnService(latency: .instant)
         do {
             _ = try await service.tryOn(person: photo, garments: [], progress: { _ in })
             XCTFail("Expected a failure for an empty selection")
@@ -29,7 +29,7 @@ final class MockProviderTests: XCTestCase {
     }
 
     func testGarmentExtractionIsStableForTheSamePhoto() async throws {
-        let service = MockGarmentExtractionService(latency: .none)
+        let service = MockGarmentExtractionService(latency: .instant)
         let first = try await service.extractGarments(from: photo)
         let second = try await service.extractGarments(from: photo)
 
@@ -38,7 +38,7 @@ final class MockProviderTests: XCTestCase {
     }
 
     func testSpinNeedsMoreThanOneFrameToBeATurnaround() async {
-        let service = MockSpinService(latency: .none)
+        let service = MockSpinService(latency: .instant)
         do {
             _ = try await service.generateSpin(from: photo, frameCount: 1, progress: { _ in })
             XCTFail("Expected a failure for a single frame")
@@ -50,7 +50,7 @@ final class MockProviderTests: XCTestCase {
     }
 
     func testSpinProducesExactlyTheFramesItWasAskedFor() async throws {
-        let service = MockSpinService(latency: .none)
+        let service = MockSpinService(latency: .instant)
         let result = try await service.generateSpin(from: photo, frameCount: 12, progress: { _ in })
         XCTAssertEqual(result.frames.count, 12)
     }
