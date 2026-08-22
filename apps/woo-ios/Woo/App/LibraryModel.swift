@@ -31,15 +31,24 @@ final class LibraryModel {
     /// Kept alongside the service so views can resolve a file URL to share
     /// without hopping through an actor.
     let store: any OutfitStore
-    /// True while the mocks are in charge, so the UI can say so honestly.
+    /// True when any capability is still a stand-in, so About can say so.
     let isUsingMockModels: Bool
+    /// True when try-on specifically is a stand-in — the result screen has to
+    /// caption it, and a config may well wire up try-on and nothing else.
+    let isTryOnMocked: Bool
 
     private var spinTask: Task<Void, Never>?
 
-    init(service: LibraryService, store: any OutfitStore, isUsingMockModels: Bool) {
+    init(
+        service: LibraryService,
+        store: any OutfitStore,
+        isUsingMockModels: Bool,
+        isTryOnMocked: Bool
+    ) {
         self.service = service
         self.store = store
         self.isUsingMockModels = isUsingMockModels
+        self.isTryOnMocked = isTryOnMocked
     }
 
     func assetURL(_ ref: AssetRef) -> URL { store.assetURL(ref) }
@@ -177,7 +186,11 @@ final class LibraryModel {
             } catch {
                 self.report(error)
             }
-            self.spinJob = nil
+            // Only clear the job if it is still ours: a cancel followed by a
+            // fresh Create 360° must not have its badge wiped by this one.
+            if self.spinJob?.outfitID == outfit.id {
+                self.spinJob = nil
+            }
         }
     }
 

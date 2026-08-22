@@ -1,4 +1,5 @@
 import AVFoundation
+import Combine
 import UIKit
 
 /// Thin wrapper over an `AVCaptureSession`: start, flip, shoot.

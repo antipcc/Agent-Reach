@@ -23,6 +23,22 @@ APP = ROOT / "Woo"
 # WooKit must stay Foundation-only so it builds and tests off-device.
 FORBIDDEN_IN_KIT = {"SwiftUI", "UIKit", "AppKit", "Vision", "CoreImage", "AVFoundation", "Photos"}
 
+# Symbols that only exist once a particular framework is imported. Missing one
+# of these is the single most common way a file that reads fine fails to build.
+# SwiftUI transitively exposes UIKit and Combine on iOS, so it satisfies both.
+REQUIRED_IMPORTS = [
+    (r"\bUIImage\b|\bUIColor\b|\bUIView\b|\bUIGraphicsImageRenderer\b|\bUIViewRepresentable\b",
+     {"UIKit", "SwiftUI"}),
+    (r"\bObservableObject\b|@Published", {"Combine", "SwiftUI"}),
+    (r"\bAVCapture\w+|\bAVCaptureSession\b", {"AVFoundation"}),
+    (r"\bVN[A-Z]\w+", {"Vision"}),
+    (r"\bPH(?:Photo|Asset|Picker)\w*", {"Photos", "PhotosUI"}),
+    (r"\bCIImage\b|\bCIContext\b", {"CoreImage", "UIKit"}),
+    (r"\bCGImagePropertyOrientation\b", {"ImageIO", "Vision"}),
+    (r"\bCGContext\b|\bCGRect\b|\bCGFloat\b|\bCGSize\b",
+     {"CoreGraphics", "UIKit", "SwiftUI", "Foundation"}),
+]
+
 
 def strip_noise(source: str) -> str:
     """Blank out comments and string literals so delimiters inside them don't count."""
@@ -86,6 +102,13 @@ def check_imports(path: Path, code: str, in_kit: bool) -> list[str]:
             problems.append(f"{path}: WooKit must stay Foundation-only, but imports {banned}")
         if not imports:
             problems.append(f"{path}: no imports at all — Foundation is missing")
+
+    body = re.sub(r"^\s*import\s+\w+\s*$", "", code, flags=re.MULTILINE)
+    for pattern, satisfied_by in REQUIRED_IMPORTS:
+        if re.search(pattern, body) and not (imports & satisfied_by):
+            problems.append(
+                f"{path}: uses /{pattern}/ but imports none of {', '.join(sorted(satisfied_by))}"
+            )
     return problems
 
 

@@ -23,7 +23,7 @@ struct AboutSheet: View {
             row("Pieces", value: "\(library.items.count)")
             row(
                 "Image models",
-                value: library.isUsingMockModels ? "Stand-ins" : "Connected"
+                value: library.isUsingMockModels ? "Partly stand-ins" : "Connected"
             )
             row("Cutouts", value: "On device")
 

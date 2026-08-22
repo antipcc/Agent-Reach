@@ -39,7 +39,7 @@ struct DressUpFlowView: View {
             case .result(let image):
                 TryOnResultView(
                     image: image,
-                    isMockResult: library.isUsingMockModels,
+                    isMockResult: library.isTryOnMocked,
                     onKeep: { keep(image) },
                     onDownload: { download(image) },
                     onClose: { dismiss() }

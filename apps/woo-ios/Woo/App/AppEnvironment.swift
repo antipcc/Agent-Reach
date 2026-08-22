@@ -30,11 +30,19 @@ struct AppEnvironment {
             palette: CoreImagePaletteExtractor()
         )
 
+        // Cutouts are always real, so they do not count toward "mocked".
+        let live = config.isConfigured
+        let isTryOnMocked = !live || config.tryOnPath == nil
+        let anyMocked = isTryOnMocked
+            || config.garmentExtractionPath == nil
+            || config.spinPath == nil
+
         return AppEnvironment(
             library: LibraryModel(
                 service: service,
                 store: store,
-                isUsingMockModels: !config.isConfigured
+                isUsingMockModels: anyMocked,
+                isTryOnMocked: isTryOnMocked
             ),
             imageLoader: ImageLoader(store: store)
         )
@@ -45,7 +53,12 @@ struct AppEnvironment {
         let store = InMemoryOutfitStore(snapshot: snapshot)
         let service = LibraryService(store: store, provider: .mock(latency: .fast))
         return AppEnvironment(
-            library: LibraryModel(service: service, store: store, isUsingMockModels: true),
+            library: LibraryModel(
+                service: service,
+                store: store,
+                isUsingMockModels: true,
+                isTryOnMocked: true
+            ),
             imageLoader: ImageLoader(store: store)
         )
     }
