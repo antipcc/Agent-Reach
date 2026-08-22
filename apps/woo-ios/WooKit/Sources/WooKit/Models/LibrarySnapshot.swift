@@ -28,12 +28,25 @@ public struct LibrarySnapshot: Codable, Sendable {
     }
 
     /// Wardrobe grouped into its sections, empty sections dropped.
-    public func itemsByCategory() -> [(category: GarmentCategory, items: [GarmentItem])] {
+    public func itemsByCategory() -> [WardrobeSection] {
         GarmentCategory.allCases.compactMap { category in
             let matching = items
                 .filter { $0.category == category }
                 .sorted { $0.createdAt > $1.createdAt }
-            return matching.isEmpty ? nil : (category, matching)
+            return matching.isEmpty ? nil : WardrobeSection(category: category, items: matching)
         }
+    }
+}
+
+/// One headed run of the wardrobe list, e.g. everything under `BOTTOMS`.
+public struct WardrobeSection: Identifiable, Hashable, Sendable {
+    public let category: GarmentCategory
+    public let items: [GarmentItem]
+
+    public var id: GarmentCategory { category }
+
+    public init(category: GarmentCategory, items: [GarmentItem]) {
+        self.category = category
+        self.items = items
     }
 }

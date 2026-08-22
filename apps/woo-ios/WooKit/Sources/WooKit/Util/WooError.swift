@@ -8,7 +8,6 @@ public enum WooError: LocalizedError, Sendable, Equatable {
     case libraryCorrupted(String)
     case aiUnavailable(String)
     case aiFailed(String)
-    case cancelled
 
     public var errorDescription: String? {
         switch self {
@@ -24,8 +23,6 @@ public enum WooError: LocalizedError, Sendable, Equatable {
             return detail
         case .aiFailed(let detail):
             return detail
-        case .cancelled:
-            return "Cancelled."
         }
     }
 }
