@@ -20,7 +20,24 @@ cd apps/woo-ios
 ./bootstrap.sh            # 需要 xcodegen：brew install xcodegen
 ```
 
-脚本会用 `project.yml` 生成 `Woo.xcodeproj` 并打开。选 iOS 17+ 模拟器或真机，Run。
+脚本会用 `project.yml` 生成 `Woo.xcodeproj` 并打开。选 iOS 17+ 模拟器，Run。
+
+### 真机运行前必做一次
+
+```bash
+cp Local.xcconfig.example Local.xcconfig
+```
+
+编辑它，填两样：
+
+- `PRODUCT_BUNDLE_IDENTIFIER` —— 换成你自己的前缀，例如 `com.你的名字.woo`。默认值
+  `app.woo.Woo` 没注册在你账号下，真机签名会直接报
+  *"cannot be registered to your development team"*
+- `DEVELOPMENT_TEAM` —— 10 位 Team ID，在 Xcode → Settings → Accounts 里你的 Apple ID 那行
+
+**别在 Xcode 的 Signing 面板里设。** `Woo.xcodeproj` 是 `bootstrap.sh` 生成的，每跑一次就
+重建一次，面板里设的东西会被冲掉 —— 而每次 `git pull` 之后都要跑它。`Local.xcconfig` 是
+工程*引用*的独立文件，不入库也不会被重新生成，设一次就一直有效。
 
 **没有 XcodeGen 时的手动方案**（30 秒）：
 
