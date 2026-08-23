@@ -49,7 +49,20 @@ public struct AIProvider: Sendable {
         session: URLSession = .shared,
         fallback: AIProvider? = nil
     ) -> AIProvider {
-        let mocked = fallback ?? .mock()
+        var mocked = fallback ?? .mock()
+
+        // A Tripo key is independent of the generic base URL, so it can turn
+        // 3D real on its own while everything else stays mocked.
+        if config.isTripoConfigured, let key = config.tripoAPIKey {
+            mocked.modelGeneration = TripoModelService(
+                apiKey: key,
+                baseURL: config.tripoBaseURL ?? TripoModelService.defaultBaseURL,
+                modelVersion: config.tripoModelVersion ?? TripoModelService.defaultModelVersion,
+                pollInterval: config.modelPollInterval,
+                timeout: config.modelTimeout
+            )
+        }
+
         guard config.isConfigured else { return mocked }
         let http = HTTPAIService(config: config, session: session)
         return AIProvider(

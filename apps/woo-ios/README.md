@@ -103,7 +103,7 @@ Assets/spin-*.png     # 360° 帧
 | 抠图 | `BackgroundRemovalService` | ✅ 真实：`VisionBackgroundRemovalService` |
 | 单品拆解 | `GarmentExtractionService` | Mock：按人体区域裁切照片 |
 | 虚拟换装 | `TryOnService` | Mock：按所选单品配色对照片做色调偏移 |
-| **3D 重建** | `ModelGenerationService` | Mock：内置方块人偶（灰色，一眼看出是占位） |
+| **3D 重建** | `ModelGenerationService` | ✅ 可接 Tripo3D（见下）；未配置时是内置灰色方块人偶 |
 | 360° 帧环（兜底） | `SpinService` | Mock：按余弦横向压缩 + 镜像的转台错觉 |
 
 Mock 的结果**看起来像那么回事，但不是模型产出**，换装结果页会明确标注。
@@ -129,7 +129,37 @@ Mock 的结果**看起来像那么回事，但不是模型产出**，换装结�
 
 **只配了一部分也没关系** —— 没配的那个能力自动继续用 Mock（见 `AIProvider.live(config:fallback:)`），可以一个一个接。
 
-### 3D 重建的接口约定（`ModelPath`）
+### 接 Tripo3D 做真实 3D 重建（推荐，最省事）
+
+在 app bundle 里放 `Woo/AIConfig.plist`（已 gitignore，key 不会进仓库）：
+
+```xml
+<dict>
+  <key>TripoAPIKey</key> <string>tsk_你的key</string>
+</dict>
+```
+
+**只要这一个键**，3D 就从占位人偶切成真实重建，其它能力不受影响。
+或者用环境变量 `WOO_TRIPO_API_KEY`（Scheme → Run → Arguments → Environment Variables）。
+
+Key 在 [tripo3d.ai](https://www.tripo3d.ai) 注册后于开发者后台创建。**每次生成消耗额度**。
+
+内部走的是 Tripo 开放 API 的四步流程（契约取自官方 `tripo3d` Python 客户端源码）：
+
+```
+POST /upload            multipart file=<bytes>          → data.image_token
+POST /task              type=image_to_model             → data.task_id
+GET  /task/{id}         轮询 status / progress
+POST /task              type=convert_model, format=USDZ → 再轮询 → 下载
+```
+
+**第四步不能省**：主任务输出的是 GLB，iOS 的 Model I/O 打不开 glTF，必须转成 USDZ。
+
+模型版本默认 `v2.5-20250123`（Tripo 客户端自己的默认值），可用 `TripoModelVersion`
+或 `WOO_TRIPO_MODEL_VERSION` 覆盖。任何一步失败都会在界面上弹出中文错误，
+**并且不会破坏已有数据** —— 那套穿搭的照片还在，重试即可。
+
+### 通用 3D 接口约定（`ModelPath`，非 Tripo 的服务商）
 
 单图重建都是**异步任务**，所以走「提交 → 轮询 → 下载」三步：
 
@@ -173,7 +203,7 @@ multipart/form-data: image=<bytes> [, garment_0..n=<bytes>]
 | 项目 | 状态 | 怎么验的 |
 |---|---|---|
 | `WooKit` 编译 | ✅ **真编译过**，0 error 0 warning | Swift 5.10 / x86_64-linux |
-| `WooKit` 单测 | ✅ **43 个用例全过** | `swift test` |
+| `WooKit` 单测 | ✅ **53 个用例全过** | `swift test` |
 | `Woo`（SwiftUI 层）语法 | ✅ 33 个文件 0 语法错误 | `swiftc -frontend -parse` |
 | `Woo`（SwiftUI 层）**类型检查** | ❌ **未验证** | Linux 上没有 SwiftUI/UIKit/Vision，做不到 |
 | 静态体检 | ✅ 63 个文件 0 问题 | `check-swift-hygiene.py` |
@@ -230,6 +260,7 @@ python3 apps/woo-ios/scripts/check-swift-hygiene.py
 - [ ] 换装：选照片 → 进度文案在过半后变成「快好了，先别退出 App」→ 结果页 ♥ / ↓ / 分享
 - [ ] 360°：进度页可 Minimize，收起后底部出现小浮标，仍在跑
 - [ ] 中文排版：单品名（`lineLimit(1)`）会不会截断、按钮宽度够不够 —— 这类只有真机能看出来
+- [ ] 3D（接了 Tripo 之后）：生成出来是真实网格，卡片下面的胶囊从「3D 占位」变成「看 3D」
 - [ ] 3D：模型是否**透明底**渲染在白卡片上 —— SceneKit 的透明背景是这次唯一在 Linux 上验证不了的渲染细节
 - [ ] 杀掉 App 重开，数据都还在
 

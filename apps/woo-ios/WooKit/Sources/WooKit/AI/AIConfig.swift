@@ -21,6 +21,12 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
     public var modelPath: String?
     public var spinPath: String?
 
+    /// Tripo3D reconstruction. Its flow is vendor-specific enough to warrant
+    /// its own client, so a key here takes over 3D from the generic path.
+    public var tripoAPIKey: String?
+    public var tripoBaseURL: URL?
+    public var tripoModelVersion: String?
+
     /// Seconds to allow a single request before giving up.
     public var timeout: TimeInterval
     /// How many times to retry a failed request (exponential backoff).
@@ -39,6 +45,9 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
         tryOnPath: String? = nil,
         modelPath: String? = nil,
         spinPath: String? = nil,
+        tripoAPIKey: String? = nil,
+        tripoBaseURL: URL? = nil,
+        tripoModelVersion: String? = nil,
         timeout: TimeInterval = 120,
         maxRetries: Int = 2,
         modelTimeout: TimeInterval = 600,
@@ -51,6 +60,9 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
         self.tryOnPath = tryOnPath
         self.modelPath = modelPath
         self.spinPath = spinPath
+        self.tripoAPIKey = tripoAPIKey
+        self.tripoBaseURL = tripoBaseURL
+        self.tripoModelVersion = tripoModelVersion
         self.timeout = timeout
         self.maxRetries = maxRetries
         self.modelTimeout = modelTimeout
@@ -58,6 +70,12 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
     }
 
     public static let empty = AIConfig()
+
+    /// True when Tripo alone is set up — it needs no shared base URL or key.
+    public var isTripoConfigured: Bool {
+        guard let tripoAPIKey else { return false }
+        return !tripoAPIKey.isEmpty
+    }
 
     /// A base URL alone is not enough — without a key every call would 401.
     public var isConfigured: Bool {
@@ -79,7 +97,9 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
             garmentExtractionPath: environment["WOO_AI_GARMENTS_PATH"],
             tryOnPath: environment["WOO_AI_TRYON_PATH"],
             modelPath: environment["WOO_AI_MODEL_PATH"],
-            spinPath: environment["WOO_AI_SPIN_PATH"]
+            spinPath: environment["WOO_AI_SPIN_PATH"],
+            tripoAPIKey: environment["WOO_TRIPO_API_KEY"],
+            tripoModelVersion: environment["WOO_TRIPO_MODEL_VERSION"]
         )
     }
 }

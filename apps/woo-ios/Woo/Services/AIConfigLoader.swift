@@ -7,7 +7,8 @@ import WooKit
 /// at staging without touching the bundle:
 ///
 /// 1. `AIConfig.plist` in the app bundle — keys `BaseURL`, `APIKey`,
-///    `CutoutPath`, `GarmentsPath`, `TryOnPath`, `ModelPath`, `SpinPath`.
+///    `CutoutPath`, `GarmentsPath`, `TryOnPath`, `ModelPath`, `SpinPath`,
+///    and `TripoAPIKey` / `TripoModelVersion` for 3D reconstruction.
 /// 2. `WOO_AI_*` environment variables.
 ///
 /// With neither, the app runs entirely on mocks. That is a supported state,
@@ -15,7 +16,11 @@ import WooKit
 enum AIConfigLoader {
     static func load(bundle: Bundle = .main) -> AIConfig {
         let fromEnvironment = AIConfig.fromEnvironment()
-        if fromEnvironment.isConfigured { return fromEnvironment }
+        // A Tripo key stands on its own, so the environment wins as soon as it
+        // carries either kind of configuration.
+        if fromEnvironment.isConfigured || fromEnvironment.isTripoConfigured {
+            return fromEnvironment
+        }
 
         guard let url = bundle.url(forResource: "AIConfig", withExtension: "plist"),
               let data = try? Data(contentsOf: url),
@@ -37,7 +42,10 @@ enum AIConfigLoader {
             garmentExtractionPath: value("GarmentsPath"),
             tryOnPath: value("TryOnPath"),
             modelPath: value("ModelPath"),
-            spinPath: value("SpinPath")
+            spinPath: value("SpinPath"),
+            tripoAPIKey: value("TripoAPIKey"),
+            tripoBaseURL: value("TripoBaseURL").flatMap(URL.init(string:)),
+            tripoModelVersion: value("TripoModelVersion")
         )
     }
 }
