@@ -60,6 +60,22 @@ def strip_noise(source: str) -> str:
                 else:
                     i += 1
             continue
+        # Raw strings: #"…"# through ###"…"###. The delimiter count decides
+        # where the literal ends, and no escaping applies inside — so braces
+        # and quotes in embedded JSON are text, not code.
+        if source[i] == "#":
+            hashes = 0
+            while i + hashes < n and source[i + hashes] == "#":
+                hashes += 1
+            if i + hashes < n and source[i + hashes] == '"':
+                closing = '"' + "#" * hashes
+                j = source.find(closing, i + hashes + 1)
+                i = n if j == -1 else j + len(closing)
+                continue
+            out.append(source[i])
+            i += 1
+            continue
+
         if source[i : i + 3] == '"""':
             j = source.find('"""', i + 3)
             i = n if j == -1 else j + 3
