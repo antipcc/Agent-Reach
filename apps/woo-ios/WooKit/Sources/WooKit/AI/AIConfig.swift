@@ -3,9 +3,13 @@ import Foundation
 /// Where the real models live. Ships empty — fill it in (or drop an
 /// `AIConfig.plist` into the app bundle) and the app switches off the mocks.
 ///
+/// `@unchecked Sendable`: every field is a value type. `URL` is one too, but
+/// swift-corelibs-foundation has not annotated it, so the implicit conformance
+/// warns when WooKit is built off-device.
+///
 /// Each path is optional on purpose: wire up try-on first and leave the rest
 /// mocked if that is the order you get vendors approved in.
-public struct AIConfig: Codable, Sendable, Equatable {
+public struct AIConfig: Codable, Equatable, @unchecked Sendable {
     public var baseURL: URL?
     public var apiKey: String?
 

@@ -84,7 +84,8 @@ final class FileOutfitStoreTests: XCTestCase {
         let store = FileOutfitStore(root: root)
         let ref = AssetRef.generated(prefix: "cutout")
         try await store.writeAsset(Data([0x89, 0x50, 0x4E, 0x47]), ref: ref)
-        XCTAssertEqual(try await store.readAsset(ref).count, 4)
+        let written = try await store.readAsset(ref)
+        XCTAssertEqual(written.count, 4)
 
         await store.deleteAsset(ref)
         do {

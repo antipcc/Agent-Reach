@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// The composition root for everything AI. Swapping mock for real models is
 /// a one-line change at the app's entry point — nothing downstream knows

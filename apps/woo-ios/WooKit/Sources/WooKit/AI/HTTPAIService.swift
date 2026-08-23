@@ -16,7 +16,12 @@ import FoundationNetworking
 ///
 /// TODO: replace `decodeImages` / `decodeGarments` with the vendor's real
 /// response shape once one is chosen. Nothing outside this file needs to change.
-public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService, TryOnService, SpinService {
+///
+/// `@unchecked Sendable`: `URLSession` is a class, so no annotation will make
+/// it a value type — but it is documented thread-safe, and every service
+/// protocol here requires `Sendable`.
+public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService, TryOnService,
+                             SpinService, @unchecked Sendable {
     let config: AIConfig
     let session: URLSession
 

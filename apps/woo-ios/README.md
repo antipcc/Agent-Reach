@@ -123,10 +123,36 @@ multipart/form-data: image=<bytes> [, garment_0..n=<bytes>]
 
 ## 5. 验证
 
-> **本仓库代码的验证状态**：这套代码是在没有 Swift/Xcode 工具链的 Linux 容器里写的，
-> 所以**没有经过编译验证**。下面第一项和第二项是你在 Mac 上跑的；写代码时实际跑过的
-> 只有静态体检脚本和一个初始化调用点比对脚本（都是 0 问题）。第一次 Build 如果报错，
-> 大概率是小的类型/签名问题，不是结构问题。
+### 验证状态（截至最近一次提交）
+
+| 项目 | 状态 | 怎么验的 |
+|---|---|---|
+| `WooKit` 编译 | ✅ **真编译过**，0 error 0 warning | Swift 5.10 / x86_64-linux |
+| `WooKit` 单测 | ✅ **32 个用例全过** | `swift test` |
+| `Woo`（SwiftUI 层）语法 | ✅ 32 个文件 0 语法错误 | `swiftc -frontend -parse` |
+| `Woo`（SwiftUI 层）**类型检查** | ❌ **未验证** | Linux 上没有 SwiftUI/UIKit/Vision，做不到 |
+| 静态体检 | ✅ 58 个文件 0 问题 | `check-swift-hygiene.py` |
+
+**这条边界很重要**：SwiftUI 层只过了语法解析，没过类型检查。参数标签写错、协议没实现全、
+类型推断失败这类问题，只有你在 Xcode 里第一次 Build 才会暴露。别把上表第三行当成「能编译」。
+
+<details>
+<summary>在 Linux 容器里复现上面的编译和单测</summary>
+
+官方 `download.swift.org` 在受限网络里常被拦。SwiftWasm 在 GitHub release 上发布的是
+**完整的 Linux 工具链**（host 端就是原生 x86_64 的 swiftc/swiftpm，wasm 只是多带一个 target），
+可以直接用来编译和测试 `WooKit`：
+
+```bash
+curl -fL -o swift.tar.gz \
+  https://github.com/swiftwasm/swift/releases/download/swift-wasm-5.10.0-RELEASE/swift-wasm-5.10.0-RELEASE-ubuntu22.04_x86_64.tar.gz
+tar xzf swift.tar.gz
+export PATH="$PWD/swift-wasm-5.10.0-RELEASE/usr/bin:$PATH"
+
+cd apps/woo-ios/WooKit && swift test
+swiftc -frontend -parse $(find ../Woo -name '*.swift')   # SwiftUI 层只能到语法这一层
+```
+</details>
 
 ### 逻辑层单测
 
