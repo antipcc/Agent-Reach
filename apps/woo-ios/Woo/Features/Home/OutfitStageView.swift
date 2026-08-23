@@ -8,6 +8,10 @@ struct OutfitStageView: View {
     @Environment(LibraryModel.self) private var library
 
     let outfit: Outfit
+    /// Whether to render the mesh rather than the photograph. A stand-in mesh
+    /// must never take a look over on its own — losing sight of the actual
+    /// outfit is a poor trade for proving a pipeline works.
+    let showsModel: Bool
 
     /// Points of horizontal travel per frame in the fallback ring. Twelve
     /// makes a full turn about a screen-and-a-half wide: enough control to
@@ -36,7 +40,7 @@ struct OutfitStageView: View {
     @State private var mode: DragMode = .undecided
 
     private var turnaround: Turnaround {
-        if let model = outfit.model { return .model(model) }
+        if showsModel, let model = outfit.model { return .model(model) }
         if let spin = outfit.spin, spin.frameCount > 1 { return .frames(spin) }
         return .still
     }

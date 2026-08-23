@@ -14,6 +14,15 @@ struct HomeView: View {
 
     @State private var detent: SheetDetent = .collapsed
     @State private var pendingDeletion: Outfit?
+    /// `nil` follows the default for the look on screen; a value is the
+    /// viewer's own choice, cleared when they page to another look.
+    @State private var showsModelChoice: Bool?
+
+    /// A real reconstruction is the point of the card, so it leads. A
+    /// stand-in does not — the photograph stays until it is asked for.
+    private func showsModel(for outfit: Outfit) -> Bool {
+        showsModelChoice ?? (outfit.model.map { !$0.isPlaceholder } ?? false)
+    }
 
     private var collapsedHeight: CGFloat { 148 }
     private var expandedHeight: CGFloat { 320 }
@@ -38,6 +47,12 @@ struct HomeView: View {
                     OutfitSheetContent(
                         outfit: outfit,
                         isExpanded: detent == .expanded,
+                        showsModel: showsModel(for: outfit),
+                        onToggleModel: {
+                            withAnimation(Theme.Motion.standard) {
+                                showsModelChoice = !showsModel(for: outfit)
+                            }
+                        },
                         onCreateTurnaround: { library.startTurnaround(for: outfit) },
                         onDelete: { pendingDeletion = outfit }
                     )
@@ -74,7 +89,7 @@ struct HomeView: View {
             SeasonWatermark(season: outfit.resolvedSeason())
                 .padding(.top, 8)
 
-            OutfitStageView(outfit: outfit)
+            OutfitStageView(outfit: outfit, showsModel: showsModel(for: outfit))
 
             HStack {
                 GlassCircleButton(
@@ -82,7 +97,10 @@ struct HomeView: View {
                     size: Theme.Metric.chevronSize,
                     tint: library.canShowPrevious ? Theme.Palette.ink : Theme.Palette.inkTertiary
                 ) {
-                    withAnimation(Theme.Motion.quick) { library.showPrevious() }
+                    withAnimation(Theme.Motion.quick) {
+                        showsModelChoice = nil
+                        library.showPrevious()
+                    }
                 }
                 .disabled(!library.canShowPrevious)
                 .accessibilityLabel("上一套")
@@ -94,7 +112,10 @@ struct HomeView: View {
                     size: Theme.Metric.chevronSize,
                     tint: library.canShowNext ? Theme.Palette.ink : Theme.Palette.inkTertiary
                 ) {
-                    withAnimation(Theme.Motion.quick) { library.showNext() }
+                    withAnimation(Theme.Motion.quick) {
+                        showsModelChoice = nil
+                        library.showNext()
+                    }
                 }
                 .disabled(!library.canShowNext)
                 .accessibilityLabel("下一套")

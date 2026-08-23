@@ -8,6 +8,8 @@ struct OutfitSheetContent: View {
 
     let outfit: Outfit
     let isExpanded: Bool
+    let showsModel: Bool
+    var onToggleModel: () -> Void
     var onCreateTurnaround: () -> Void
     var onDelete: () -> Void
 
@@ -78,15 +80,13 @@ struct OutfitSheetContent: View {
     private var actions: some View {
         HStack(spacing: 14) {
             if let model = outfit.model {
-                Label(
-                    model.isPlaceholder ? "3D 占位" : "3D 已就绪",
-                    systemImage: "rotate.3d"
+                PillButton(
+                    title: showsModel ? "看照片" : (model.isPlaceholder ? "3D 占位" : "看 3D"),
+                    systemImage: showsModel ? "photo" : "rotate.3d",
+                    filled: showsModel,
+                    tint: showsModel ? Theme.Palette.ink : Theme.Palette.inkSecondary,
+                    action: onToggleModel
                 )
-                    .font(Theme.Font.button)
-                    .foregroundStyle(Theme.Palette.inkSecondary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Theme.Palette.ground))
             } else if outfit.hasSpin {
                 Label("360° 已就绪", systemImage: "rotate.3d")
                     .font(Theme.Font.button)
