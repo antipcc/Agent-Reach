@@ -75,7 +75,7 @@ struct DressUpFlowView: View {
                     work?.cancel()
                     dismiss()
                 }
-                .accessibilityLabel("Cancel")
+                .accessibilityLabel("取消")
                 Spacer()
             }
             .padding(.horizontal, Theme.Metric.screenPadding)
@@ -112,7 +112,7 @@ struct DressUpFlowView: View {
 
     /// Past the halfway mark the wait is long enough to be worth explaining.
     private var progressTitle: String {
-        progress < 0.55 ? "Refining your new look" : "Keep the app open while we finish"
+        progress < 0.55 ? "正在生成新造型" : "快好了，先别退出 App"
     }
 
     private var piecesStrip: some View {
@@ -149,7 +149,7 @@ struct DressUpFlowView: View {
     private func keep(_ image: UIImage) {
         Task {
             await library.saveTryOnResult(image, itemIDs: itemIDs)
-            onToast("Saved to favorites")
+            onToast("已收藏")
             dismiss()
         }
     }
@@ -158,7 +158,7 @@ struct DressUpFlowView: View {
         Task {
             do {
                 try await PhotoSaver.save(image)
-                onToast("Saved to Photos")
+                onToast("已存到相册")
             } catch {
                 library.errorMessage = (error as? LocalizedError)?.errorDescription
                     ?? error.localizedDescription

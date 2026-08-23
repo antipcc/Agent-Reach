@@ -48,24 +48,24 @@ struct HomeView: View {
             }
         }
         .confirmationDialog(
-            "Delete this look?",
+            "删除这套穿搭？",
             isPresented: Binding(
                 get: { pendingDeletion != nil },
                 set: { if !$0 { pendingDeletion = nil } }
             ),
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) {
+            Button("删除", role: .destructive) {
                 guard let outfit = pendingDeletion else { return }
                 pendingDeletion = nil
                 Task {
                     await library.delete(outfit)
-                    onToast("Look deleted")
+                    onToast("已删除")
                 }
             }
-            Button("Keep", role: .cancel) { pendingDeletion = nil }
+            Button("再想想", role: .cancel) { pendingDeletion = nil }
         } message: {
-            Text("The pieces stay in your wardrobe.")
+            Text("拆出来的单品会留在衣橱里。")
         }
     }
 
@@ -85,7 +85,7 @@ struct HomeView: View {
                     withAnimation(Theme.Motion.quick) { library.showPrevious() }
                 }
                 .disabled(!library.canShowPrevious)
-                .accessibilityLabel("Previous look")
+                .accessibilityLabel("上一套")
 
                 Spacer()
 
@@ -97,7 +97,7 @@ struct HomeView: View {
                     withAnimation(Theme.Motion.quick) { library.showNext() }
                 }
                 .disabled(!library.canShowNext)
-                .accessibilityLabel("Next look")
+                .accessibilityLabel("下一套")
             }
             .padding(.horizontal, Theme.Metric.screenPadding)
         }
@@ -139,10 +139,10 @@ struct EmptyLibraryView: View {
                 Image(systemName: "camera.viewfinder")
                     .font(.system(size: 34, weight: .ultraLight))
                     .foregroundStyle(Theme.Palette.inkTertiary)
-                Text("Your first look starts here")
+                Text("从今天的第一套开始")
                     .font(Theme.Font.date)
                     .foregroundStyle(Theme.Palette.inkSecondary)
-                PillButton(title: "Take a photo", systemImage: "camera", action: onCapture)
+                PillButton(title: "拍一张", systemImage: "camera", action: onCapture)
             }
             Spacer()
         }

@@ -12,13 +12,13 @@ public enum WooError: LocalizedError, Sendable, Equatable {
     public var errorDescription: String? {
         switch self {
         case .assetNotFound(let name):
-            return "Image \(name) is missing from the library."
+            return "图片 \(name) 已不在图库里了。"
         case .outfitNotFound:
-            return "That look is no longer in your library."
+            return "这套穿搭已经不在你的图库里了。"
         case .itemNotFound:
-            return "That piece is no longer in your wardrobe."
+            return "这件单品已经不在你的衣橱里了。"
         case .libraryCorrupted(let detail):
-            return "Your library could not be read: \(detail)"
+            return "读不出你的图库：\(detail)"
         case .aiUnavailable(let detail):
             return detail
         case .aiFailed(let detail):

@@ -85,12 +85,12 @@ struct OutfitStageView: View {
         switch turnaround {
         case .model(let model):
             return model.isPlaceholder
-                ? "Stand-in 3D figure. Drag sideways to turn it."
-                : "3D look. Drag sideways to turn it."
+                ? "占位 3D 人形，左右拖动可以转身。"
+                : "3D 造型，左右拖动可以转身。"
         case .frames:
-            return "Look with a 360° view. Drag sideways to turn it."
+            return "带 360° 视角的穿搭，左右拖动可以转身。"
         case .still:
-            return "Look. Drag to move it."
+            return "穿搭照片，拖动可以移动。"
         }
     }
 

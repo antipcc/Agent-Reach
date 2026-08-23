@@ -28,7 +28,7 @@ struct TurnaroundProgressView: View {
             VStack {
                 HStack {
                     PillButton(
-                        title: "Minimize",
+                        title: "收起",
                         systemImage: "chevron.down",
                         tint: Color.white.opacity(0.18)
                     ) {
@@ -48,10 +48,10 @@ struct TurnaroundProgressView: View {
                 Spacer()
 
                 VStack(spacing: 14) {
-                    ProgressPill(title: "Creating your 360° look", progress: job.progress)
+                    ProgressPill(title: "正在生成 360° 造型", progress: job.progress)
                     ThinProgressBar(progress: job.progress)
                         .padding(.horizontal, 40)
-                    Button("Cancel") { library.cancelTurnaround() }
+                    Button("取消") { library.cancelTurnaround() }
                         .font(Theme.Font.hint)
                         .foregroundStyle(.white.opacity(0.6))
                 }

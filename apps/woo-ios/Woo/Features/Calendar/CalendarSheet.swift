@@ -11,13 +11,7 @@ struct CalendarSheet: View {
 
     @State private var visibleMonth = Date()
 
-    private let calendar = Calendar.current
-
-    private static let monthFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "LLLL yyyy"
-        return formatter
-    }()
+    private let calendar = Localization.calendar
 
     var body: some View {
         VStack(spacing: 18) {
@@ -35,11 +29,11 @@ struct CalendarSheet: View {
             GlassCircleButton(systemImage: "chevron.left", background: Theme.Palette.ground) {
                 withAnimation(Theme.Motion.quick) { shiftMonth(by: -1) }
             }
-            .accessibilityLabel("Previous month")
+            .accessibilityLabel("上一月")
 
             Spacer()
 
-            Text(Self.monthFormatter.string(from: visibleMonth))
+            Text(Localization.monthFormatter.string(from: visibleMonth))
                 .font(Theme.Font.monthTitle)
                 .foregroundStyle(Theme.Palette.ink)
 
@@ -48,7 +42,7 @@ struct CalendarSheet: View {
             GlassCircleButton(systemImage: "chevron.right", background: Theme.Palette.ground) {
                 withAnimation(Theme.Motion.quick) { shiftMonth(by: 1) }
             }
-            .accessibilityLabel("Next month")
+            .accessibilityLabel("下一月")
         }
         .padding(.horizontal, Theme.Metric.screenPadding)
     }
@@ -121,7 +115,7 @@ struct DayCell: View {
     let isToday: Bool
     var onSelect: (Outfit) -> Void
 
-    private let calendar = Calendar.current
+    private let calendar = Localization.calendar
 
     var body: some View {
         Button {
@@ -151,6 +145,6 @@ struct DayCell: View {
 
     private var accessibilityLabel: String {
         let number = calendar.component(.day, from: day)
-        return outfit == nil ? "Day \(number), no look" : "Day \(number), open this look"
+        return outfit == nil ? "\(number) 日，没有穿搭" : "\(number) 日，打开这套穿搭"
     }
 }

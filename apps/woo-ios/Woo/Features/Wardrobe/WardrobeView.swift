@@ -39,20 +39,20 @@ struct WardrobeView: View {
         }
         .animation(Theme.Motion.standard, value: selection)
         .confirmationDialog(
-            "Remove this piece?",
+            "移除这件单品？",
             isPresented: Binding(
                 get: { pendingDeletion != nil },
                 set: { if !$0 { pendingDeletion = nil } }
             ),
             titleVisibility: .visible
         ) {
-            Button("Remove", role: .destructive) {
+            Button("移除", role: .destructive) {
                 guard let item = pendingDeletion else { return }
                 pendingDeletion = nil
                 selection.removeAll { $0 == item.id }
                 Task { await library.deleteItem(item) }
             }
-            Button("Keep", role: .cancel) { pendingDeletion = nil }
+            Button("再想想", role: .cancel) { pendingDeletion = nil }
         }
     }
 
@@ -101,10 +101,10 @@ struct WardrobeView: View {
             Image(systemName: "tray")
                 .font(.system(size: 32, weight: .ultraLight))
                 .foregroundStyle(Theme.Palette.inkTertiary)
-            Text("Your wardrobe fills itself")
+            Text("衣橱会自己长起来")
                 .font(Theme.Font.date)
                 .foregroundStyle(Theme.Palette.inkSecondary)
-            Text("Every look you capture is split into pieces and filed here.")
+            Text("每拍一套穿搭，都会自动拆成单品收进这里。")
                 .font(Theme.Font.hint)
                 .foregroundStyle(Theme.Palette.inkTertiary)
                 .multilineTextAlignment(.center)
@@ -154,7 +154,7 @@ struct GarmentCell: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button(role: .destructive, action: onDelete) {
-                Label("Remove piece", systemImage: "trash")
+                Label("移除单品", systemImage: "trash")
             }
         }
         .accessibilityLabel(item.name)
@@ -189,14 +189,14 @@ struct SelectionTray: View {
                                 .buttonStyle(.plain)
                                 .offset(x: 4, y: -4)
                             }
-                            .accessibilityLabel("\(item.name), tap the cross to remove")
+                            .accessibilityLabel("\(item.name)，点叉号可移除")
                     }
                 }
                 .padding(.vertical, 2)
             }
 
             Button(action: onDressUp) {
-                Text("Dress up")
+                Text("换装")
                     .font(Theme.Font.button)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 18)

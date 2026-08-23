@@ -16,7 +16,7 @@ struct PaletteDotsRow: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(hexes.count) colours in this look")
+        .accessibilityLabel("这套穿搭有 \(hexes.count) 个配色")
     }
 }
 

@@ -108,7 +108,7 @@ struct RootView: View {
         .buttonStyle(.plain)
         .padding(.bottom, 86)
         .transition(.move(edge: .bottom).combined(with: .opacity))
-        .accessibilityLabel("360° look in progress, \(Int((job.progress * 100).rounded())) percent")
+        .accessibilityLabel("360° 造型生成中，\(Int((job.progress * 100).rounded())) %")
     }
 }
 

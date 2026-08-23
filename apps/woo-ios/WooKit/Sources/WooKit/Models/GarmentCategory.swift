@@ -6,8 +6,18 @@ public enum GarmentCategory: String, Codable, CaseIterable, Sendable, Identifiab
 
     public var id: String { rawValue }
 
-    /// Section header text, e.g. `OUTERWEAR`.
-    public var displayName: String { rawValue.uppercased() }
+    /// Section header text on the wardrobe screen.
+    public var displayName: String {
+        switch self {
+        case .tops: return "上装"
+        case .outerwear: return "外套"
+        case .bottoms: return "下装"
+        case .dresses: return "连衣裙"
+        case .shoes: return "鞋履"
+        case .bags: return "包袋"
+        case .accessories: return "配饰"
+        }
+    }
 
     /// Position of this section in the wardrobe list.
     public var sortIndex: Int {

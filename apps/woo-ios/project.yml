@@ -23,14 +23,15 @@ targets:
       path: Woo/Info.plist
       properties:
         CFBundleDisplayName: Woo
+        CFBundleDevelopmentRegion: zh-Hans
         CFBundleShortVersionString: "0.1.0"
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIUserInterfaceStyle: Light
-        NSCameraUsageDescription: Woo uses the camera to photograph the outfit you are wearing today.
-        NSPhotoLibraryAddUsageDescription: Woo saves the looks you generate to your photo library.
+        NSCameraUsageDescription: Woo 用相机拍下你今天穿的这一套。
+        NSPhotoLibraryAddUsageDescription: Woo 会把生成的造型保存到你的相册。
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.woo.Woo

@@ -34,12 +34,12 @@ final class CameraController: NSObject, ObservableObject {
 
     func start() async {
         guard hasCamera else {
-            state = .unavailable("This device has no camera. Choose a photo instead.")
+            state = .unavailable("这台设备没有摄像头，可以从相册选一张。")
             return
         }
 
         guard await requestAccess() else {
-            state = .unavailable("Woo needs camera access. You can grant it in Settings.")
+            state = .unavailable("Woo 需要相机权限，可以在「设置」里打开。")
             return
         }
 
@@ -66,7 +66,7 @@ final class CameraController: NSObject, ObservableObject {
 
     func capture() async throws -> UIImage {
         guard state == .ready else {
-            throw PhotoSaver.SaveError.failed("The camera is not ready yet.")
+            throw PhotoSaver.SaveError.failed("相机还没准备好。")
         }
 
         let settings = AVCapturePhotoSettings()
@@ -112,7 +112,7 @@ final class CameraController: NSObject, ObservableObject {
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position),
               let input = try? AVCaptureDeviceInput(device: device),
               session.canAddInput(input) else {
-            state = .unavailable("The camera could not be opened.")
+            state = .unavailable("相机打不开。")
             return
         }
         session.addInput(input)
@@ -136,7 +136,7 @@ extension CameraController: AVCapturePhotoCaptureDelegate {
         } else if let data = photo.fileDataRepresentation(), let image = UIImage(data: data) {
             result = .success(image)
         } else {
-            result = .failure(PhotoSaver.SaveError.failed("The photo could not be read."))
+            result = .failure(PhotoSaver.SaveError.failed("这张照片读不出来。"))
         }
 
         Task { @MainActor [weak self] in

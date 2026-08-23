@@ -12,24 +12,24 @@ struct AboutSheet: View {
                 Text("WOO")
                     .font(Theme.Font.wordmark)
                     .tracking(Theme.Font.wordmarkTracking)
-                Text("Your looks, day by day.")
+                Text("一天一套，记下来。")
                     .font(Theme.Font.hint)
                     .foregroundStyle(Theme.Palette.inkSecondary)
             }
 
             Divider().background(Theme.Palette.hairline)
 
-            row("Looks", value: "\(library.outfits.count)")
-            row("Pieces", value: "\(library.items.count)")
+            row("穿搭", value: "\(library.outfits.count)")
+            row("单品", value: "\(library.items.count)")
             row(
-                "Image models",
-                value: library.isUsingMockModels ? "Partly stand-ins" : "Connected"
+                "图像模型",
+                value: library.isUsingMockModels ? "部分占位" : "已接入"
             )
-            row("Cutouts", value: "On device")
-            row("3D looks", value: modelSummary)
+            row("抠图", value: "端上运行")
+            row("3D 造型", value: modelSummary)
 
             if library.isUsingMockModels {
-                Text("Garment splitting, try-on and 3D reconstruction are running on stand-ins. Add an AIConfig.plist or set WOO_AI_* to connect real models.")
+                Text("单品拆解、换装和 3D 重建目前都在跑占位实现。放一个 AIConfig.plist，或设置 WOO_AI_* 环境变量，就能接入真实模型。")
                     .font(Theme.Font.itemName)
                     .foregroundStyle(Theme.Palette.inkTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -46,11 +46,11 @@ struct AboutSheet: View {
     /// — a reconstruction that failed leaves the setting on and the look bare.
     private var modelSummary: String {
         let meshes = library.outfits.filter(\.hasModel)
-        guard !meshes.isEmpty else { return "None yet" }
+        guard !meshes.isEmpty else { return "还没有" }
         let standIns = meshes.filter { $0.model?.isPlaceholder == true }.count
         return standIns == 0
-            ? "\(meshes.count) reconstructed"
-            : "\(meshes.count), \(standIns) stand-in"
+            ? "已重建 \(meshes.count) 套"
+            : "共 \(meshes.count) 套，\(standIns) 套是占位"
     }
 
     private func row(_ title: String, value: String) -> some View {

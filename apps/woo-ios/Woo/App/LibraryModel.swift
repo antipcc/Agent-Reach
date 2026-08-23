@@ -120,7 +120,7 @@ final class LibraryModel {
     @discardableResult
     func ingest(_ image: UIImage, date: Date = Date(), source: OutfitSource = .camera) async -> Outfit? {
         guard let data = image.jpegData(compressionQuality: 0.92) else {
-            errorMessage = "That photo could not be read."
+            errorMessage = "这张照片读不出来。"
             return nil
         }
 
@@ -214,7 +214,7 @@ final class LibraryModel {
 
     func tryOn(person: UIImage, itemIDs: [UUID], progress: @escaping @Sendable (Double) -> Void) async -> UIImage? {
         guard let data = person.jpegData(compressionQuality: 0.92) else {
-            errorMessage = "That photo could not be read."
+            errorMessage = "这张照片读不出来。"
             return nil
         }
         do {

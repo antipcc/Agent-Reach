@@ -58,7 +58,7 @@ struct CaptureFlowView: View {
                     tint: .white,
                     background: Color.white.opacity(0.18)
                 ) { dismiss() }
-                .accessibilityLabel("Close")
+                .accessibilityLabel("关闭")
 
                 Spacer()
 
@@ -67,7 +67,7 @@ struct CaptureFlowView: View {
                     tint: .white,
                     background: Color.white.opacity(0.18)
                 ) { isShowingHelp = true }
-                .accessibilityLabel("Tips for a good photo")
+                .accessibilityLabel("拍摄建议")
             }
             .padding(.horizontal, Theme.Metric.screenPadding)
 
@@ -92,7 +92,7 @@ struct CaptureFlowView: View {
                         .fill(Color.white.opacity(0.18)))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Choose a photo")
+            .accessibilityLabel("从相册选")
 
             Spacer()
 
@@ -107,7 +107,7 @@ struct CaptureFlowView: View {
             }
             .buttonStyle(.plain)
             .disabled(isCapturing)
-            .accessibilityLabel("Take the photo")
+            .accessibilityLabel("拍摄")
 
             Spacer()
 
@@ -120,7 +120,7 @@ struct CaptureFlowView: View {
                         .fill(Color.white.opacity(0.18)))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Flip camera")
+            .accessibilityLabel("切换镜头")
         }
         .padding(.horizontal, 28)
     }
@@ -135,7 +135,7 @@ struct CaptureFlowView: View {
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-            PillButton(title: "Choose a photo", systemImage: "photo", filled: false) {
+            PillButton(title: "从相册选一张", systemImage: "photo", filled: false) {
                 isPickingPhoto = true
             }
         }
@@ -170,7 +170,7 @@ struct BodyGuideOverlay: View {
                     .frame(width: width, height: height)
                     .position(x: proxy.size.width / 2, y: proxy.size.height * 0.52)
 
-                Text("Fit your full body in frame")
+                Text("把全身放进取景框")
                     .font(Theme.Font.hint)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
@@ -187,15 +187,15 @@ struct BodyGuideOverlay: View {
 /// split both depend on it, so it is worth saying plainly.
 struct CaptureHelpSheet: View {
     private let tips = [
-        ("figure.stand", "Stand so your whole body fits inside the oval."),
-        ("light.max", "Even, front-on light keeps edges clean."),
-        ("rectangle.on.rectangle.slash", "A plain wall behind you cuts out best."),
-        ("camera.metering.center.weighted", "Hold the phone at chest height, level.")
+        ("figure.stand", "站进椭圆里，全身都要在框内。"),
+        ("light.max", "正面均匀光，抠图边缘才干净。"),
+        ("rectangle.on.rectangle.slash", "背后是纯色墙，抠得最好。"),
+        ("camera.metering.center.weighted", "手机举到胸口高度，端平。")
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("A good look photo")
+            Text("怎么拍效果最好")
                 .font(Theme.Font.monthTitle)
                 .foregroundStyle(Theme.Palette.ink)
 

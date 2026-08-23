@@ -17,9 +17,9 @@ struct WordmarkHeader: View {
 
             HStack(spacing: 10) {
                 GlassCircleButton(systemImage: "calendar", action: onCalendar)
-                    .accessibilityLabel("Calendar")
+                    .accessibilityLabel("日历")
                 GlassCircleButton(systemImage: "line.3.horizontal", action: onMenu)
-                    .accessibilityLabel("Menu")
+                    .accessibilityLabel("菜单")
             }
         }
         .padding(.horizontal, Theme.Metric.screenPadding)

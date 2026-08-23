@@ -212,7 +212,7 @@ public actor LibraryService {
         let snapshot = try await store.load()
         let chosen = itemIDs.compactMap { id in snapshot.items.first { $0.id == id } }
         guard !chosen.isEmpty else {
-            throw WooError.aiFailed("Pick at least one piece to try on.")
+            throw WooError.aiFailed("至少选一件单品来试穿。")
         }
 
         var garments: [ImageData] = []

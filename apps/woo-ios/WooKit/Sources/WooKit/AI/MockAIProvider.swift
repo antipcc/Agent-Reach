@@ -17,22 +17,22 @@ private func runMockJob(
     }
 }
 
-/// Names the mock hands out, per category. Picked to match what the reference
-/// app labels its pieces with.
+/// Names the mock hands out, per category. They appear on the wardrobe
+/// screen, so they are written the way the interface is.
 private let mockNames: [GarmentCategory: [String]] = [
-    .tops: ["Graphic T-shirt", "Ribbed Camisole", "Sailor Collar Top", "Cropped Tee"],
-    .outerwear: ["Cropped Cardigan", "Chambray Shirt", "Quilted Jacket"],
-    .bottoms: ["Pleated Mini Skirt", "Wide-leg Cargos", "Denim Shorts", "Tiered Tulle Skirt"],
-    .dresses: ["Slip Dress", "Tiered Midi Dress"],
-    .shoes: ["Platform Combat Boots", "Chunky Sneakers", "Mary Jane Flats"],
-    .bags: ["Fluffy Shoulder Bag", "Mini Tote"],
-    .accessories: ["Ribbon Choker", "Baseball Cap", "Leg Warmers"]
+    .tops: ["印花T恤", "罗纹吊带", "海军领上衣", "短款T恤"],
+    .outerwear: ["短款开衫", "水洗牛仔衬衫", "绗缝外套"],
+    .bottoms: ["百褶短裙", "阔腿工装裤", "牛仔短裤", "多层纱裙"],
+    .dresses: ["吊带连衣裙", "多层中长裙"],
+    .shoes: ["厚底马丁靴", "老爹鞋", "玛丽珍鞋"],
+    .bags: ["毛绒单肩包", "迷你托特包"],
+    .accessories: ["蝴蝶结颈带", "棒球帽", "堆堆袜"]
 ]
 
 /// Deterministic pick so the same photo always produces the same wardrobe —
 /// mock output that jitters between runs makes the app feel broken.
 private func mockName(for category: GarmentCategory, seed: Int) -> String {
-    let pool = mockNames[category] ?? [category.displayName.capitalized]
+    let pool = mockNames[category] ?? [category.displayName]
     return pool[abs(seed) % pool.count]
 }
 
@@ -53,7 +53,7 @@ public struct MockBackgroundRemovalService: BackgroundRemovalService {
     }
 
     public func removeBackground(from image: ImageData) async throws -> ImageData {
-        guard !image.isEmpty else { throw WooError.aiFailed("There was no photo to work from.") }
+        guard !image.isEmpty else { throw WooError.aiFailed("没有可用的照片。") }
         try await runMockJob(latency: latency) { _ in }
         return assets.cutout(from: image)
     }
@@ -69,7 +69,7 @@ public struct MockGarmentExtractionService: GarmentExtractionService {
     }
 
     public func extractGarments(from image: ImageData) async throws -> [ExtractedGarment] {
-        guard !image.isEmpty else { throw WooError.aiFailed("There was no photo to work from.") }
+        guard !image.isEmpty else { throw WooError.aiFailed("没有可用的照片。") }
         try await runMockJob(latency: latency) { _ in }
 
         // A full-body shot reliably yields a top, a bottom and shoes; that is
@@ -103,8 +103,8 @@ public struct MockTryOnService: TryOnService {
         garments: [ImageData],
         progress: @escaping ProgressHandler
     ) async throws -> ImageData {
-        guard !person.isEmpty else { throw WooError.aiFailed("Pick a full-body photo first.") }
-        guard !garments.isEmpty else { throw WooError.aiFailed("Pick at least one piece to try on.") }
+        guard !person.isEmpty else { throw WooError.aiFailed("先选一张全身照。") }
+        guard !garments.isEmpty else { throw WooError.aiFailed("至少选一件单品来试穿。") }
         try await runMockJob(latency: latency, progress: progress)
         return assets.tryOnResult(person: person, garments: garments)
     }
@@ -121,7 +121,7 @@ public struct MockModelGenerationService: ModelGenerationService {
         from image: ImageData,
         progress: @escaping ProgressHandler
     ) async throws -> Model3DResult {
-        guard !image.isEmpty else { throw WooError.aiFailed("There was no photo to work from.") }
+        guard !image.isEmpty else { throw WooError.aiFailed("没有可用的照片。") }
         try await runMockJob(latency: latency, progress: progress)
         return Model3DResult(
             data: PlaceholderModelBuilder.mannequinData(),
@@ -145,8 +145,8 @@ public struct MockSpinService: SpinService {
         frameCount: Int,
         progress: @escaping ProgressHandler
     ) async throws -> SpinResult {
-        guard !image.isEmpty else { throw WooError.aiFailed("There was no photo to work from.") }
-        guard frameCount > 1 else { throw WooError.aiFailed("A 360° look needs at least two frames.") }
+        guard !image.isEmpty else { throw WooError.aiFailed("没有可用的照片。") }
+        guard frameCount > 1 else { throw WooError.aiFailed("360° 造型至少需要两帧。") }
         try await runMockJob(latency: latency, progress: progress)
         return SpinResult(frames: assets.spinFrames(from: image, frameCount: frameCount))
     }

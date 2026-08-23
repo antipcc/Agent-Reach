@@ -11,12 +11,6 @@ struct OutfitSheetContent: View {
     var onCreateTurnaround: () -> Void
     var onDelete: () -> Void
 
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy.MM.dd"
-        return formatter
-    }()
-
     private var pieces: [GarmentItem] {
         library.items(in: outfit)
     }
@@ -27,7 +21,7 @@ struct OutfitSheetContent: View {
                 PaletteDotsRow(hexes: outfit.palette)
                 Spacer()
                 Label(
-                    Self.dateFormatter.string(from: outfit.date),
+                    Localization.dayFormatter.string(from: outfit.date),
                     systemImage: "calendar"
                 )
                 .font(Theme.Font.date)
@@ -50,7 +44,7 @@ struct OutfitSheetContent: View {
     @ViewBuilder
     private var piecesRow: some View {
         if pieces.isEmpty {
-            Text("No pieces were found in this look.")
+            Text("这套穿搭里没有拆出单品。")
                 .font(Theme.Font.hint)
                 .foregroundStyle(Theme.Palette.inkTertiary)
                 .frame(height: 118)
@@ -85,7 +79,7 @@ struct OutfitSheetContent: View {
         HStack(spacing: 14) {
             if let model = outfit.model {
                 Label(
-                    model.isPlaceholder ? "3D stand-in" : "3D ready",
+                    model.isPlaceholder ? "3D 占位" : "3D 已就绪",
                     systemImage: "rotate.3d"
                 )
                     .font(Theme.Font.button)
@@ -94,7 +88,7 @@ struct OutfitSheetContent: View {
                     .padding(.vertical, 10)
                     .background(Capsule().fill(Theme.Palette.ground))
             } else if outfit.hasSpin {
-                Label("360° ready", systemImage: "rotate.3d")
+                Label("360° 已就绪", systemImage: "rotate.3d")
                     .font(Theme.Font.button)
                     .foregroundStyle(Theme.Palette.inkSecondary)
                     .padding(.horizontal, 14)
@@ -102,7 +96,7 @@ struct OutfitSheetContent: View {
                     .background(Capsule().fill(Theme.Palette.ground))
             } else {
                 PillButton(
-                    title: "Create 360°",
+                    title: "生成 360°",
                     systemImage: "rotate.3d",
                     action: onCreateTurnaround
                 )
@@ -117,7 +111,7 @@ struct OutfitSheetContent: View {
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(Theme.Palette.ground))
             }
-            .accessibilityLabel("Share this look")
+            .accessibilityLabel("分享这套穿搭")
 
             Button(action: onDelete) {
                 Image(systemName: "trash")
@@ -127,7 +121,7 @@ struct OutfitSheetContent: View {
                     .background(Circle().fill(Theme.Palette.ground))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Delete this look")
+            .accessibilityLabel("删除这套穿搭")
         }
     }
 }

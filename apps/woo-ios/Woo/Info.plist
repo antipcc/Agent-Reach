@@ -2,14 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh-Hans</string>
 	<key>CFBundleDisplayName</key>
 	<string>Woo</string>
 	<key>CFBundleShortVersionString</key>
 	<string>0.1.0</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Woo uses the camera to photograph the outfit you are wearing today.</string>
+	<string>Woo 用相机拍下你今天穿的这一套。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Woo saves the looks you generate to your photo library.</string>
+	<string>Woo 会把生成的造型保存到你的相册。</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

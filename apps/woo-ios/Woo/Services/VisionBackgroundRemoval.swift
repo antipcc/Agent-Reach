@@ -14,7 +14,7 @@ struct VisionBackgroundRemovalService: BackgroundRemovalService {
 
     func removeBackground(from image: ImageData) async throws -> ImageData {
         guard let uiImage = UIImage(data: image.data), let cgImage = uiImage.cgImage else {
-            throw WooError.aiFailed("That photo could not be read.")
+            throw WooError.aiFailed("这张照片读不出来。")
         }
 
         let handler = VNImageRequestHandler(
@@ -26,7 +26,7 @@ struct VisionBackgroundRemovalService: BackgroundRemovalService {
         do {
             try handler.perform([request])
             guard let result = request.results?.first, !result.allInstances.isEmpty else {
-                return try fallback(image, reason: "No one was found in that photo.")
+                return try fallback(image, reason: "照片里没有找到人。")
             }
             let masked = try result.generateMaskedImage(
                 ofInstances: result.allInstances,
@@ -34,7 +34,7 @@ struct VisionBackgroundRemovalService: BackgroundRemovalService {
                 croppedToInstancesExtent: true
             )
             guard let png = pngData(from: CIImage(cvPixelBuffer: masked)) else {
-                return try fallback(image, reason: "The cutout could not be encoded.")
+                return try fallback(image, reason: "抠图结果无法编码。")
             }
             return .png(png)
         } catch let error as WooError {

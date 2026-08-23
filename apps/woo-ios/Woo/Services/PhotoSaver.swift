@@ -11,7 +11,7 @@ enum PhotoSaver {
         var errorDescription: String? {
             switch self {
             case .denied:
-                return "Woo needs permission to add photos. You can grant it in Settings."
+                return "Woo 需要相册写入权限，可以在「设置」里打开。"
             case .failed(let detail):
                 return detail
             }
@@ -30,7 +30,7 @@ enum PhotoSaver {
                     continuation.resume()
                 } else {
                     continuation.resume(throwing: SaveError.failed(
-                        error?.localizedDescription ?? "The photo could not be saved."
+                        error?.localizedDescription ?? "照片没能保存。"
                     ))
                 }
             }

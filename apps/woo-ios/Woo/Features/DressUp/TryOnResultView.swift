@@ -17,7 +17,7 @@ struct TryOnResultView: View {
             VStack(spacing: 0) {
                 HStack {
                     GlassCircleButton(systemImage: "xmark", background: Theme.Palette.surface, action: onClose)
-                        .accessibilityLabel("Close")
+                        .accessibilityLabel("关闭")
                     Spacer()
                 }
                 .padding(.horizontal, Theme.Metric.screenPadding)
@@ -31,7 +31,7 @@ struct TryOnResultView: View {
                     .padding(.horizontal, 24)
 
                 if isMockResult {
-                    Text("Stand-in result — connect a try-on model to see the real thing.")
+                    Text("这是占位结果 —— 接入换装模型后才是真的。")
                         .font(Theme.Font.itemName)
                         .foregroundStyle(Theme.Palette.inkTertiary)
                         .multilineTextAlignment(.center)
@@ -45,18 +45,18 @@ struct TryOnResultView: View {
                     actionButton(
                         systemImage: "heart.fill",
                         tint: Theme.Palette.favorite,
-                        label: "Save to favourites",
+                        label: "收藏",
                         action: onKeep
                     )
                     actionButton(
                         systemImage: "arrow.down",
                         tint: Theme.Palette.ink,
-                        label: "Save to Photos",
+                        label: "存到相册",
                         action: onDownload
                     )
                     ShareLink(
                         item: Image(uiImage: image),
-                        preview: SharePreview("Your new look", image: Image(uiImage: image))
+                        preview: SharePreview("你的新造型", image: Image(uiImage: image))
                     ) {
                         Image(systemName: "square.and.arrow.up")
                             .font(.system(size: 16, weight: .regular))
@@ -65,7 +65,7 @@ struct TryOnResultView: View {
                             .background(Circle().fill(Theme.Palette.surface))
                             .wooLift(radius: 8, y: 3, opacity: 0.08)
                     }
-                    .accessibilityLabel("Share")
+                    .accessibilityLabel("分享")
                 }
                 .padding(.bottom, 40)
             }

@@ -33,16 +33,16 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
     // MARK: - Services
 
     public func removeBackground(from image: ImageData) async throws -> ImageData {
-        let path = try requirePath(config.backgroundRemovalPath, name: "background removal")
+        let path = try requirePath(config.backgroundRemovalPath, name: "抠图")
         let data = try await post(path: path, parts: [MultipartPart(name: "image", image: image)])
         guard let first = try decodeImages(data).first else {
-            throw WooError.aiFailed("The cutout service returned no image.")
+            throw WooError.aiFailed("抠图服务没有返回图片。")
         }
         return first
     }
 
     public func extractGarments(from image: ImageData) async throws -> [ExtractedGarment] {
-        let path = try requirePath(config.garmentExtractionPath, name: "garment extraction")
+        let path = try requirePath(config.garmentExtractionPath, name: "单品拆解")
         let data = try await post(path: path, parts: [MultipartPart(name: "image", image: image)])
         return try decodeGarments(data)
     }
@@ -52,7 +52,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         garments: [ImageData],
         progress: @escaping ProgressHandler
     ) async throws -> ImageData {
-        let path = try requirePath(config.tryOnPath, name: "try-on")
+        let path = try requirePath(config.tryOnPath, name: "换装")
         progress(0.05)
         var parts = [MultipartPart(name: "person", image: person)]
         for (index, garment) in garments.enumerated() {
@@ -63,7 +63,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         let data = try await post(path: path, parts: parts)
         progress(1)
         guard let first = try decodeImages(data).first else {
-            throw WooError.aiFailed("The try-on service returned no image.")
+            throw WooError.aiFailed("换装服务没有返回图片。")
         }
         return first
     }
@@ -75,7 +75,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         from image: ImageData,
         progress: @escaping ProgressHandler
     ) async throws -> Model3DResult {
-        let path = try requirePath(config.modelPath, name: "3D reconstruction")
+        let path = try requirePath(config.modelPath, name: "3D 重建")
         progress(0.02)
 
         let submitted = try decode(
@@ -89,7 +89,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         }
 
         guard let jobID = submitted.jobID ?? submitted.id else {
-            throw WooError.aiFailed("The reconstruction service returned neither a model nor a job id.")
+            throw WooError.aiFailed("重建服务既没返回模型，也没返回任务 ID。")
         }
 
         let started = Date()
@@ -102,10 +102,10 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
 
             switch poll.status?.lowercased() {
             case "failed", "error", "cancelled":
-                throw WooError.aiFailed(poll.error ?? "Reconstruction failed.")
+                throw WooError.aiFailed(poll.error ?? "重建失败。")
             case "succeeded", "success", "done", "completed":
                 guard let finished = try await downloadModel(from: poll) else {
-                    throw WooError.aiFailed("Reconstruction finished without a model.")
+                    throw WooError.aiFailed("重建完成了，但没有拿到模型。")
                 }
                 progress(1)
                 return finished
@@ -118,7 +118,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
             }
         }
 
-        throw WooError.aiFailed("Reconstruction timed out after \(Int(config.modelTimeout))s.")
+        throw WooError.aiFailed("重建超时，已等待 \(Int(config.modelTimeout)) 秒。")
     }
 
     /// Pulls the mesh out of a response, whichever way it was handed over.
@@ -127,7 +127,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         let rawFormat = envelope.format ?? "usdz"
         guard let format = Model3DAsset.Format.loadable(rawFormat) else {
             throw WooError.aiFailed(
-                "The service returned a \(rawFormat) model, which iOS cannot open. Ask it for usdz."
+                "服务返回的是 \(rawFormat) 模型，iOS 打不开。请让它返回 usdz。"
             )
         }
 
@@ -140,7 +140,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         request.timeoutInterval = config.timeout
         let bytes = try await send(request)
         guard !bytes.isEmpty else {
-            throw WooError.aiFailed("The downloaded model was empty.")
+            throw WooError.aiFailed("下载到的模型是空的。")
         }
         return Model3DResult(data: bytes, format: format)
     }
@@ -160,7 +160,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         progress(1)
         let frames = try decodeImages(data)
         guard frames.count > 1 else {
-            throw WooError.aiFailed("The 360° service returned too few frames.")
+            throw WooError.aiFailed("360° 服务返回的帧数太少。")
         }
         return SpinResult(frames: frames)
     }
@@ -169,14 +169,14 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
 
     private func requirePath(_ path: String?, name: String) throws -> String {
         guard let path, config.baseURL != nil else {
-            throw WooError.aiUnavailable("No \(name) endpoint is configured yet.")
+            throw WooError.aiUnavailable("还没有配置\(name)的服务地址。")
         }
         return path
     }
 
     private func post(path: String, parts: [MultipartPart]) async throws -> Data {
         guard let baseURL = config.baseURL else {
-            throw WooError.aiUnavailable("No AI base URL is configured yet.")
+            throw WooError.aiUnavailable("还没有配置 AI 服务地址。")
         }
         let url = baseURL.appendingPathComponent(path)
         let boundary = "woo-\(UUID().uuidString)"
@@ -205,7 +205,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
 
     private func get(path: String) async throws -> Data {
         guard let baseURL = config.baseURL else {
-            throw WooError.aiUnavailable("No AI base URL is configured yet.")
+            throw WooError.aiUnavailable("还没有配置 AI 服务地址。")
         }
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = "GET"
@@ -226,13 +226,13 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
                     return
                 }
                 guard let http = response as? HTTPURLResponse else {
-                    continuation.resume(throwing: WooError.aiFailed("No response from the AI service."))
+                    continuation.resume(throwing: WooError.aiFailed("AI 服务没有响应。"))
                     return
                 }
                 guard (200..<300).contains(http.statusCode) else {
                     let detail = data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
                     continuation.resume(
-                        throwing: WooError.aiFailed("AI service failed (\(http.statusCode)). \(detail.prefix(200))")
+                        throwing: WooError.aiFailed("AI 服务出错（\(http.statusCode)）。\(detail.prefix(200))")
                     )
                     return
                 }
@@ -289,7 +289,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         return try items.compactMap { item in
             guard let encoded = item.image else { return nil }
             return ExtractedGarment(
-                name: item.name ?? "Piece",
+                name: item.name ?? "单品",
                 category: item.category.flatMap(GarmentCategory.init(rawValue:)) ?? .tops,
                 cutout: try decodeBase64Image(encoded)
             )
@@ -300,7 +300,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         do {
             return try JSONDecoder().decode(Envelope.self, from: data)
         } catch {
-            throw WooError.aiFailed("Could not read the AI service response.")
+            throw WooError.aiFailed("读不懂 AI 服务的响应。")
         }
     }
 
@@ -308,7 +308,7 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         // Tolerate `data:image/png;base64,…` as well as a bare payload.
         let payload = encoded.contains(",") ? String(encoded.split(separator: ",").last ?? "") : encoded
         guard let bytes = Data(base64Encoded: payload), !bytes.isEmpty else {
-            throw WooError.aiFailed("The AI service returned an unreadable image.")
+            throw WooError.aiFailed("AI 服务返回了一张读不出的图片。")
         }
         return ImageData(data: bytes, format: .png)
     }

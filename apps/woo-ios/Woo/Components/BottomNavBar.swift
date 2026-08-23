@@ -13,7 +13,7 @@ struct BottomNavBar: View {
 
     var body: some View {
         HStack(spacing: 26) {
-            tabButton(.home, systemImage: "house.fill", label: "Home")
+            tabButton(.home, systemImage: "house.fill", label: "首页")
 
             Button(action: onCapture) {
                 Image(systemName: "camera.fill")
@@ -24,9 +24,9 @@ struct BottomNavBar: View {
                     .wooLift(radius: 10, y: 4, opacity: 0.22)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Take a photo")
+            .accessibilityLabel("拍照")
 
-            tabButton(.wardrobe, systemImage: "tray.full.fill", label: "Wardrobe")
+            tabButton(.wardrobe, systemImage: "tray.full.fill", label: "衣橱")
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 8)
