@@ -5,7 +5,9 @@
 - **平台**：iOS 17+，SwiftUI，Swift 5 语言模式
 - **界面语言**：全中文，且**不跟随系统语言** —— 日期、月份、星期都固定用中文（见 `Woo/App/Localization.swift`）。
   唯一保留英文的是首页那个巨大的季节水印（SPRING / SUMMER / FALL / WINTER）和字标 WOO，
-  它们是平面设计元素不是界面文案
+  它们是平面设计元素不是界面文案。
+  App 通过 `CFBundleLocalizations` + `Woo/zh-Hans.lproj/` 向系统声明自己是中文 App ——
+  少了这一步，相册选择器、分享面板、权限弹窗按钮这些**由系统绘制**的界面会跟随手机语言
 - **架构**：`Woo`（界面层）→ `WooKit`（纯 Foundation 逻辑层，可在任何平台编译和单测）
 - **AI**：四个协议 + 一个 composition root，默认全部走离线 Mock；抠图例外，用系统 Vision 真实实现
 

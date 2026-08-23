@@ -1,0 +1,4 @@
+/* 权限弹窗的正文。系统直接读这里，所以必须随 App 的本地化一起提供，
+   而不是只写在 Info.plist 里。 */
+"NSCameraUsageDescription" = "Woo 用相机拍下你今天穿的这一套。";
+"NSPhotoLibraryAddUsageDescription" = "Woo 会把生成的造型保存到你的相册。";

@@ -24,6 +24,8 @@ targets:
       properties:
         CFBundleDisplayName: Woo
         CFBundleDevelopmentRegion: zh-Hans
+        CFBundleLocalizations:
+          - zh-Hans
         CFBundleShortVersionString: "0.1.0"
         UILaunchScreen:
           UIColorName: LaunchBackground
