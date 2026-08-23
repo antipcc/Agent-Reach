@@ -112,14 +112,26 @@ def check_imports(path: Path, code: str, in_kit: bool) -> list[str]:
     return problems
 
 
+DECLARATION = re.compile(
+    r"^\s*(?:public\s+|internal\s+|private\s+|fileprivate\s+)?"
+    r"(?:final\s+)?(?:struct|class|enum|actor|protocol)\s+(\w+)"
+)
+
+
 def collect_declarations(path: Path, code: str, table: dict[str, list[Path]]) -> None:
-    for kind, name in re.findall(
-        r"^\s*(?:public\s+|internal\s+|private\s+|fileprivate\s+)?"
-        r"(?:final\s+)?(struct|class|enum|actor|protocol)\s+(\w+)",
-        code,
-        re.MULTILINE,
-    ):
-        table[name].append(path)
+    """Record top-level type names only.
+
+    Nested types legitimately share names across parents — every
+    UIViewRepresentable has its own Coordinator — so only declarations at
+    file scope can collide.
+    """
+    depth = 0
+    for line in code.splitlines():
+        if depth == 0:
+            match = DECLARATION.match(line)
+            if match:
+                table[match.group(1)].append(path)
+        depth += line.count("{") - line.count("}")
 
 
 def main() -> int:

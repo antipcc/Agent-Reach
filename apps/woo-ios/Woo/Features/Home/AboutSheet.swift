@@ -26,9 +26,10 @@ struct AboutSheet: View {
                 value: library.isUsingMockModels ? "Partly stand-ins" : "Connected"
             )
             row("Cutouts", value: "On device")
+            row("3D looks", value: modelSummary)
 
             if library.isUsingMockModels {
-                Text("Garment splitting, try-on and 360° are running on stand-ins. Add an AIConfig.plist or set WOO_AI_* to connect real models.")
+                Text("Garment splitting, try-on and 3D reconstruction are running on stand-ins. Add an AIConfig.plist or set WOO_AI_* to connect real models.")
                     .font(Theme.Font.itemName)
                     .foregroundStyle(Theme.Palette.inkTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -39,6 +40,17 @@ struct AboutSheet: View {
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.Palette.surface)
+    }
+
+    /// Counts what the library actually holds rather than what is configured
+    /// — a reconstruction that failed leaves the setting on and the look bare.
+    private var modelSummary: String {
+        let meshes = library.outfits.filter(\.hasModel)
+        guard !meshes.isEmpty else { return "None yet" }
+        let standIns = meshes.filter { $0.model?.isPlaceholder == true }.count
+        return standIns == 0
+            ? "\(meshes.count) reconstructed"
+            : "\(meshes.count), \(standIns) stand-in"
     }
 
     private func row(_ title: String, value: String) -> some View {

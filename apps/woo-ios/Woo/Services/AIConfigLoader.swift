@@ -7,7 +7,7 @@ import WooKit
 /// at staging without touching the bundle:
 ///
 /// 1. `AIConfig.plist` in the app bundle — keys `BaseURL`, `APIKey`,
-///    `CutoutPath`, `GarmentsPath`, `TryOnPath`, `SpinPath`.
+///    `CutoutPath`, `GarmentsPath`, `TryOnPath`, `ModelPath`, `SpinPath`.
 /// 2. `WOO_AI_*` environment variables.
 ///
 /// With neither, the app runs entirely on mocks. That is a supported state,
@@ -36,6 +36,7 @@ enum AIConfigLoader {
             backgroundRemovalPath: value("CutoutPath"),
             garmentExtractionPath: value("GarmentsPath"),
             tryOnPath: value("TryOnPath"),
+            modelPath: value("ModelPath"),
             spinPath: value("SpinPath")
         )
     }

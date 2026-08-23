@@ -33,9 +33,11 @@ struct AppEnvironment {
         // Cutouts are always real, so they do not count toward "mocked".
         let live = config.isConfigured
         let isTryOnMocked = !live || config.tryOnPath == nil
+        let isTurnaroundMocked = !live || (config.modelPath == nil && config.spinPath == nil)
         let anyMocked = isTryOnMocked
+            || isTurnaroundMocked
+            || !live
             || config.garmentExtractionPath == nil
-            || config.spinPath == nil
 
         return AppEnvironment(
             library: LibraryModel(

@@ -8,9 +8,11 @@ import WooKit
 @MainActor
 @Observable
 final class LibraryModel {
-    /// A running 360° generation. Survives being minimised — the point of the
-    /// Minimize button is that the app stays usable while a model works.
-    struct SpinJob: Equatable {
+    /// A running 360° generation — a mesh reconstruction, or the frame ring
+    /// when no reconstruction endpoint is configured. Survives being
+    /// minimised: the point of that button is that the app stays usable while
+    /// a model works.
+    struct TurnaroundJob: Equatable {
         let outfitID: UUID
         let preview: AssetRef
         var progress: Double
@@ -20,7 +22,7 @@ final class LibraryModel {
     private(set) var outfits: [Outfit] = []
     private(set) var items: [GarmentItem] = []
     private(set) var isLoading = true
-    private(set) var spinJob: SpinJob?
+    private(set) var turnaroundJob: TurnaroundJob?
 
     /// Surfaced as a banner; set to nil to dismiss.
     var errorMessage: String?
@@ -37,7 +39,7 @@ final class LibraryModel {
     /// caption it, and a config may well wire up try-on and nothing else.
     let isTryOnMocked: Bool
 
-    private var spinTask: Task<Void, Never>?
+    private var turnaroundTask: Task<Void, Never>?
 
     init(
         service: LibraryService,
@@ -146,7 +148,7 @@ final class LibraryModel {
     func delete(_ outfit: Outfit) async {
         do {
             try await service.deleteOutfit(id: outfit.id)
-            if spinJob?.outfitID == outfit.id { cancelSpin() }
+            if turnaroundJob?.outfitID == outfit.id { cancelTurnaround() }
             await refresh()
         } catch {
             report(error)
@@ -164,18 +166,23 @@ final class LibraryModel {
 
     // MARK: - 360°
 
-    func startSpin(for outfit: Outfit) {
-        guard spinJob == nil else { return }
-        spinJob = SpinJob(outfitID: outfit.id, preview: outfit.cutout, progress: 0, isMinimized: false)
+    func startTurnaround(for outfit: Outfit) {
+        guard turnaroundJob == nil else { return }
+        turnaroundJob = TurnaroundJob(
+            outfitID: outfit.id,
+            preview: outfit.cutout,
+            progress: 0,
+            isMinimized: false
+        )
 
-        spinTask = Task { [weak self] in
+        turnaroundTask = Task { [weak self] in
             guard let self else { return }
             do {
-                _ = try await self.service.generateSpin(
+                _ = try await self.service.generateTurnaround(
                     for: outfit.id,
                     progress: { value in
                         Task { @MainActor [weak self] in
-                            self?.spinJob?.progress = value
+                            self?.turnaroundJob?.progress = value
                         }
                     }
                 )
@@ -188,19 +195,19 @@ final class LibraryModel {
             }
             // Only clear the job if it is still ours: a cancel followed by a
             // fresh Create 360° must not have its badge wiped by this one.
-            if self.spinJob?.outfitID == outfit.id {
-                self.spinJob = nil
+            if self.turnaroundJob?.outfitID == outfit.id {
+                self.turnaroundJob = nil
             }
         }
     }
 
-    func minimizeSpin() { spinJob?.isMinimized = true }
-    func restoreSpin() { spinJob?.isMinimized = false }
+    func minimizeTurnaround() { turnaroundJob?.isMinimized = true }
+    func restoreTurnaround() { turnaroundJob?.isMinimized = false }
 
-    func cancelSpin() {
-        spinTask?.cancel()
-        spinTask = nil
-        spinJob = nil
+    func cancelTurnaround() {
+        turnaroundTask?.cancel()
+        turnaroundTask = nil
+        turnaroundJob = nil
     }
 
     // MARK: - Try-on

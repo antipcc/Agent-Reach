@@ -3,10 +3,14 @@ import WooKit
 
 /// What a 360° generation looks like while it runs: the figure lit against
 /// black, a percentage, and a way out that does not cancel the work.
-struct SpinProgressView: View {
+///
+/// The same screen covers both kinds of turnaround — a mesh reconstruction
+/// and the fallback frame ring take comparable time and neither has anything
+/// to show until it is done.
+struct TurnaroundProgressView: View {
     @Environment(LibraryModel.self) private var library
 
-    let job: LibraryModel.SpinJob
+    let job: LibraryModel.TurnaroundJob
 
     var body: some View {
         ZStack {
@@ -28,7 +32,7 @@ struct SpinProgressView: View {
                         systemImage: "chevron.down",
                         tint: Color.white.opacity(0.18)
                     ) {
-                        library.minimizeSpin()
+                        library.minimizeTurnaround()
                     }
                     Spacer()
                 }
@@ -47,7 +51,7 @@ struct SpinProgressView: View {
                     ProgressPill(title: "Creating your 360° look", progress: job.progress)
                     ThinProgressBar(progress: job.progress)
                         .padding(.horizontal, 40)
-                    Button("Cancel") { library.cancelSpin() }
+                    Button("Cancel") { library.cancelTurnaround() }
                         .font(Theme.Font.hint)
                         .foregroundStyle(.white.opacity(0.6))
                 }

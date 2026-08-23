@@ -38,7 +38,7 @@ struct HomeView: View {
                     OutfitSheetContent(
                         outfit: outfit,
                         isExpanded: detent == .expanded,
-                        onCreateSpin: { library.startSpin(for: outfit) },
+                        onCreateTurnaround: { library.startTurnaround(for: outfit) },
                         onDelete: { pendingDeletion = outfit }
                     )
                 }

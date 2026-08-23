@@ -1,6 +1,6 @@
 # WOO — 穿搭记录 App（iOS / SwiftUI）
 
-每天拍一张全身照，自动抠图存成当日 OOTD；AI 把照片拆成单品归进衣橱；勾选单品可以对自己的照片做虚拟换装；还能把一套穿搭生成可拖拽旋转的 360° 立体形象。
+每天拍一张全身照，自动抠图存成当日 OOTD；AI 把照片拆成单品归进衣橱；勾选单品可以对自己的照片做虚拟换装；还能把一套穿搭重建成**真正的 3D 模型**，在首页卡片上拖拽转身。
 
 - **平台**：iOS 17+，SwiftUI，Swift 5 语言模式
 - **架构**：`Woo`（界面层）→ `WooKit`（纯 Foundation 逻辑层，可在任何平台编译和单测）
@@ -81,7 +81,8 @@ Assets/spin-*.png     # 360° 帧
 | 抠图 | `BackgroundRemovalService` | ✅ 真实：`VisionBackgroundRemovalService` |
 | 单品拆解 | `GarmentExtractionService` | Mock：按人体区域裁切照片 |
 | 虚拟换装 | `TryOnService` | Mock：按所选单品配色对照片做色调偏移 |
-| 360° | `SpinService` | Mock：按余弦横向压缩 + 镜像的转台错觉 |
+| **3D 重建** | `ModelGenerationService` | Mock：内置方块人偶（灰色，一眼看出是占位） |
+| 360° 帧环（兜底） | `SpinService` | Mock：按余弦横向压缩 + 镜像的转台错觉 |
 
 Mock 的结果**看起来像那么回事，但不是模型产出**，换装结果页会明确标注。
 
@@ -95,17 +96,39 @@ Mock 的结果**看起来像那么回事，但不是模型产出**，换装结�
 <dict>
   <key>BaseURL</key>      <string>https://your-endpoint.example</string>
   <key>APIKey</key>       <string>sk-...</string>
+  <key>ModelPath</key>    <string>/v1/image-to-3d</string>
   <key>TryOnPath</key>    <string>/v1/try-on</string>
   <key>GarmentsPath</key> <string>/v1/garments</string>
   <key>SpinPath</key>     <string>/v1/spin</string>
 </dict>
 ```
 
-**B. Scheme 里加环境变量**：`WOO_AI_BASE_URL`、`WOO_AI_API_KEY`、`WOO_AI_TRYON_PATH`、`WOO_AI_GARMENTS_PATH`、`WOO_AI_SPIN_PATH`、`WOO_AI_CUTOUT_PATH`。
+**B. Scheme 里加环境变量**：`WOO_AI_BASE_URL`、`WOO_AI_API_KEY`、`WOO_AI_MODEL_PATH`、`WOO_AI_TRYON_PATH`、`WOO_AI_GARMENTS_PATH`、`WOO_AI_SPIN_PATH`、`WOO_AI_CUTOUT_PATH`。
 
 **只配了一部分也没关系** —— 没配的那个能力自动继续用 Mock（见 `AIProvider.live(config:fallback:)`），可以一个一个接。
 
-### 接口约定
+### 3D 重建的接口约定（`ModelPath`）
+
+单图重建都是**异步任务**，所以走「提交 → 轮询 → 下载」三步：
+
+```
+POST {baseURL}{ModelPath}          multipart: image=<bytes>
+  → {"job_id": "..."}                        # 也支持直接返回模型
+GET  {baseURL}{ModelPath}/{job_id}
+  → {"status": "pending|succeeded|failed", "progress": 0.42,
+     "model_url": "https://...", "format": "usdz"}
+GET  {model_url} → 模型字节
+```
+
+默认轮询间隔 3s，单个任务预算 600s（`AIConfig.modelPollInterval` / `modelTimeout`）。
+服务端报了 `progress` 就用它驱动进度条，没报就按已用时间爬到 90% —— 绝不会假装做完了。
+
+**格式只接受 iOS 能打开的：`usdz` / `obj` / `ply`。** 返回 `glb` / `gltf` 会直接报错并告诉你去要
+usdz —— Model I/O 打不开 glTF，与其加载时静默失败，不如提交时就说清楚。
+
+**没配 `ModelPath` 时**会自动退回 `SpinPath` 的帧环；两个都没配就是内置的灰色方块人偶。
+
+### 其它接口约定
 
 `HTTPAIService` 默认按「multipart 上传 → JSON 返回 base64 图」这个最通行的形状写的：
 
@@ -128,10 +151,10 @@ multipart/form-data: image=<bytes> [, garment_0..n=<bytes>]
 | 项目 | 状态 | 怎么验的 |
 |---|---|---|
 | `WooKit` 编译 | ✅ **真编译过**，0 error 0 warning | Swift 5.10 / x86_64-linux |
-| `WooKit` 单测 | ✅ **32 个用例全过** | `swift test` |
-| `Woo`（SwiftUI 层）语法 | ✅ 32 个文件 0 语法错误 | `swiftc -frontend -parse` |
+| `WooKit` 单测 | ✅ **43 个用例全过** | `swift test` |
+| `Woo`（SwiftUI 层）语法 | ✅ 33 个文件 0 语法错误 | `swiftc -frontend -parse` |
 | `Woo`（SwiftUI 层）**类型检查** | ❌ **未验证** | Linux 上没有 SwiftUI/UIKit/Vision，做不到 |
-| 静态体检 | ✅ 58 个文件 0 问题 | `check-swift-hygiene.py` |
+| 静态体检 | ✅ 63 个文件 0 问题 | `check-swift-hygiene.py` |
 
 **这条边界很重要**：SwiftUI 层只过了语法解析，没过类型检查。参数标签写错、协议没实现全、
 类型推断失败这类问题，只有你在 Xcode 里第一次 Build 才会暴露。别把上表第三行当成「能编译」。
@@ -177,20 +200,23 @@ python3 apps/woo-ios/scripts/check-swift-hygiene.py
 
 - [ ] 首页：左右 ‹ › 翻看不同穿搭；季节水印随日期变（SPRING / SUMMER / FALL / WINTER）
 - [ ] 首页：拖拽人物可移动；双击复位
-- [ ] 首页：生成过 360° 的穿搭，横向拖拽能转身
+- [ ] 首页：生成过 360° 的穿搭，横向拖拽能转身（没配 API 时转的是灰色方块人偶，这是对的）
 - [ ] 底部抽屉：上滑露出该套的单品缩略图和名称
 - [ ] 日历：翻月；有穿搭的日子显示缩略图；点击跳回首页对应那套
 - [ ] 拍摄：全身取景椭圆 + 提示；拍完（模拟器用相册）自动抠图入库
 - [ ] 衣橱：按 TOPS / OUTERWEAR / BOTTOMS / SHOES 分组；点选出现顶部托盘
 - [ ] 换装：选照片 → 进度文案在过半后变成 "Keep the app open..." → 结果页 ♥ / ↓ / 分享
 - [ ] 360°：进度页可 Minimize，收起后底部出现小浮标，仍在跑
+- [ ] 3D：模型是否**透明底**渲染在白卡片上 —— SceneKit 的透明背景是这次唯一在 Linux 上验证不了的渲染细节
 - [ ] 杀掉 App 重开，数据都还在
 
 ---
 
 ## 6. 已知边界
 
-- **Mock 不是模型**：换装/拆解/360° 的结果是占位效果，接真实端点后自然消失
+- **Mock 不是模型**：换装/拆解/3D 的结果是占位效果，接真实端点后自然消失
+- **单图重建的天花板**：宽松衣物（纱裙、阔腿裤）是这类模型最弱的一环，背面和面部基本靠脑补。
+  这是方案本身的限制，不是实现问题；效果不满意就换供应商，或退回 `SpinPath` 用帧环
 - **抠图依赖 iOS 17 Vision**：找不到人像时会退回原图而不是失败（宁可存下来）
 - 仅竖屏、仅 iPhone（`TARGETED_DEVICE_FAMILY = 1`）
 - 没有账号、没有云同步、没有分享社区

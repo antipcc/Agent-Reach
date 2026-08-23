@@ -23,8 +23,8 @@ struct RootView: View {
 
             navigationBar
 
-            if let job = library.spinJob, job.isMinimized {
-                minimizedSpinBadge(job)
+            if let job = library.turnaroundJob, job.isMinimized {
+                minimizedTurnaroundBadge(job)
             }
         }
         .overlay(alignment: .top) {
@@ -33,12 +33,12 @@ struct RootView: View {
             }
         }
         .overlay {
-            if let job = library.spinJob, !job.isMinimized {
-                SpinProgressView(job: job)
+            if let job = library.turnaroundJob, !job.isMinimized {
+                TurnaroundProgressView(job: job)
                     .transition(.opacity)
             }
         }
-        .animation(Theme.Motion.standard, value: library.spinJob)
+        .animation(Theme.Motion.standard, value: library.turnaroundJob)
         .animation(Theme.Motion.gentle, value: library.errorMessage)
         .wooToast($toast)
         .fullScreenCover(isPresented: $isCapturing) {
@@ -88,9 +88,9 @@ struct RootView: View {
             .padding(.bottom, 6)
     }
 
-    private func minimizedSpinBadge(_ job: LibraryModel.SpinJob) -> some View {
+    private func minimizedTurnaroundBadge(_ job: LibraryModel.TurnaroundJob) -> some View {
         Button {
-            library.restoreSpin()
+            library.restoreTurnaround()
         } label: {
             HStack(spacing: 8) {
                 AssetImage(ref: job.preview)

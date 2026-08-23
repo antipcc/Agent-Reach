@@ -8,7 +8,7 @@ struct OutfitSheetContent: View {
 
     let outfit: Outfit
     let isExpanded: Bool
-    var onCreateSpin: () -> Void
+    var onCreateTurnaround: () -> Void
     var onDelete: () -> Void
 
     private static let dateFormatter: DateFormatter = {
@@ -83,7 +83,17 @@ struct OutfitSheetContent: View {
 
     private var actions: some View {
         HStack(spacing: 14) {
-            if outfit.hasSpin {
+            if let model = outfit.model {
+                Label(
+                    model.isPlaceholder ? "3D stand-in" : "3D ready",
+                    systemImage: "rotate.3d"
+                )
+                    .font(Theme.Font.button)
+                    .foregroundStyle(Theme.Palette.inkSecondary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Theme.Palette.ground))
+            } else if outfit.hasSpin {
                 Label("360° ready", systemImage: "rotate.3d")
                     .font(Theme.Font.button)
                     .foregroundStyle(Theme.Palette.inkSecondary)
@@ -94,10 +104,10 @@ struct OutfitSheetContent: View {
                 PillButton(
                     title: "Create 360°",
                     systemImage: "rotate.3d",
-                    action: onCreateSpin
+                    action: onCreateTurnaround
                 )
-                .disabled(library.spinJob != nil)
-                .opacity(library.spinJob == nil ? 1 : 0.5)
+                .disabled(library.turnaroundJob != nil)
+                .opacity(library.turnaroundJob == nil ? 1 : 0.5)
             }
 
             ShareLink(item: library.assetURL(outfit.cutout)) {
