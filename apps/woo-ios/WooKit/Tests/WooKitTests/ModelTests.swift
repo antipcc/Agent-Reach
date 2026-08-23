@@ -15,12 +15,8 @@ final class ModelTests: XCTestCase {
             source: .tryOn
         )
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        let decoded = try decoder.decode(Outfit.self, from: try encoder.encode(outfit))
+        let data = try LibraryCoding.encoder.encode(outfit)
+        let decoded = try LibraryCoding.decoder.decode(Outfit.self, from: data)
         XCTAssertEqual(decoded, outfit)
     }
 

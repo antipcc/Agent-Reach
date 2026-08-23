@@ -16,12 +16,20 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
     public var backgroundRemovalPath: String?
     public var garmentExtractionPath: String?
     public var tryOnPath: String?
+    /// Single-image reconstruction. Job-based at every provider, so the client
+    /// submits, polls, then downloads — see `HTTPAIService`.
+    public var modelPath: String?
     public var spinPath: String?
 
     /// Seconds to allow a single request before giving up.
     public var timeout: TimeInterval
     /// How many times to retry a failed request (exponential backoff).
     public var maxRetries: Int
+    /// Total budget for one reconstruction job, which runs for minutes rather
+    /// than the seconds a single request takes.
+    public var modelTimeout: TimeInterval
+    /// Seconds between polls of a running reconstruction job.
+    public var modelPollInterval: TimeInterval
 
     public init(
         baseURL: URL? = nil,
@@ -29,18 +37,24 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
         backgroundRemovalPath: String? = nil,
         garmentExtractionPath: String? = nil,
         tryOnPath: String? = nil,
+        modelPath: String? = nil,
         spinPath: String? = nil,
         timeout: TimeInterval = 120,
-        maxRetries: Int = 2
+        maxRetries: Int = 2,
+        modelTimeout: TimeInterval = 600,
+        modelPollInterval: TimeInterval = 3
     ) {
         self.baseURL = baseURL
         self.apiKey = apiKey
         self.backgroundRemovalPath = backgroundRemovalPath
         self.garmentExtractionPath = garmentExtractionPath
         self.tryOnPath = tryOnPath
+        self.modelPath = modelPath
         self.spinPath = spinPath
         self.timeout = timeout
         self.maxRetries = maxRetries
+        self.modelTimeout = modelTimeout
+        self.modelPollInterval = modelPollInterval
     }
 
     public static let empty = AIConfig()
@@ -51,6 +65,7 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
         return backgroundRemovalPath != nil
             || garmentExtractionPath != nil
             || tryOnPath != nil
+            || modelPath != nil
             || spinPath != nil
     }
 
@@ -63,6 +78,7 @@ public struct AIConfig: Codable, Equatable, @unchecked Sendable {
             backgroundRemovalPath: environment["WOO_AI_CUTOUT_PATH"],
             garmentExtractionPath: environment["WOO_AI_GARMENTS_PATH"],
             tryOnPath: environment["WOO_AI_TRYON_PATH"],
+            modelPath: environment["WOO_AI_MODEL_PATH"],
             spinPath: environment["WOO_AI_SPIN_PATH"]
         )
     }

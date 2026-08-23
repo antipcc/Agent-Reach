@@ -110,6 +110,27 @@ public struct MockTryOnService: TryOnService {
     }
 }
 
+public struct MockModelGenerationService: ModelGenerationService {
+    let latency: MockLatency
+
+    public init(latency: MockLatency = .realistic) {
+        self.latency = latency
+    }
+
+    public func generateModel(
+        from image: ImageData,
+        progress: @escaping ProgressHandler
+    ) async throws -> Model3DResult {
+        guard !image.isEmpty else { throw WooError.aiFailed("There was no photo to work from.") }
+        try await runMockJob(latency: latency, progress: progress)
+        return Model3DResult(
+            data: PlaceholderModelBuilder.mannequinData(),
+            format: .obj,
+            isPlaceholder: true
+        )
+    }
+}
+
 public struct MockSpinService: SpinService {
     let assets: any MockAssetLibrary
     let latency: MockLatency

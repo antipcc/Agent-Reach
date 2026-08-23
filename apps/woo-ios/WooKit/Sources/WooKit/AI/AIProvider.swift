@@ -10,17 +10,20 @@ public struct AIProvider: Sendable {
     public var backgroundRemoval: any BackgroundRemovalService
     public var garmentExtraction: any GarmentExtractionService
     public var tryOn: any TryOnService
+    public var modelGeneration: any ModelGenerationService
     public var spin: any SpinService
 
     public init(
         backgroundRemoval: any BackgroundRemovalService,
         garmentExtraction: any GarmentExtractionService,
         tryOn: any TryOnService,
+        modelGeneration: any ModelGenerationService,
         spin: any SpinService
     ) {
         self.backgroundRemoval = backgroundRemoval
         self.garmentExtraction = garmentExtraction
         self.tryOn = tryOn
+        self.modelGeneration = modelGeneration
         self.spin = spin
     }
 
@@ -34,6 +37,7 @@ public struct AIProvider: Sendable {
             backgroundRemoval: MockBackgroundRemovalService(assets: assets, latency: latency),
             garmentExtraction: MockGarmentExtractionService(assets: assets, latency: latency),
             tryOn: MockTryOnService(assets: assets, latency: latency),
+            modelGeneration: MockModelGenerationService(latency: latency),
             spin: MockSpinService(assets: assets, latency: latency)
         )
     }
@@ -52,6 +56,7 @@ public struct AIProvider: Sendable {
             backgroundRemoval: config.backgroundRemovalPath == nil ? mocked.backgroundRemoval : http,
             garmentExtraction: config.garmentExtractionPath == nil ? mocked.garmentExtraction : http,
             tryOn: config.tryOnPath == nil ? mocked.tryOn : http,
+            modelGeneration: config.modelPath == nil ? mocked.modelGeneration : http,
             spin: config.spinPath == nil ? mocked.spin : http
         )
     }

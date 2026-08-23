@@ -21,7 +21,7 @@ import FoundationNetworking
 /// it a value type — but it is documented thread-safe, and every service
 /// protocol here requires `Sendable`.
 public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService, TryOnService,
-                             SpinService, @unchecked Sendable {
+                             ModelGenerationService, SpinService, @unchecked Sendable {
     let config: AIConfig
     let session: URLSession
 
@@ -66,6 +66,83 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
             throw WooError.aiFailed("The try-on service returned no image.")
         }
         return first
+    }
+
+    /// Submit, poll, download. Reconstruction takes tens of seconds, so every
+    /// provider worth using hands back a job id rather than a mesh; a provider
+    /// that answers with the mesh straight away is handled too.
+    public func generateModel(
+        from image: ImageData,
+        progress: @escaping ProgressHandler
+    ) async throws -> Model3DResult {
+        let path = try requirePath(config.modelPath, name: "3D reconstruction")
+        progress(0.02)
+
+        let submitted = try decode(
+            try await post(path: path, parts: [MultipartPart(name: "image", image: image)])
+        )
+
+        // Some providers answer synchronously. Take the mesh if it is there.
+        if let ready = try await downloadModel(from: submitted) {
+            progress(1)
+            return ready
+        }
+
+        guard let jobID = submitted.jobID ?? submitted.id else {
+            throw WooError.aiFailed("The reconstruction service returned neither a model nor a job id.")
+        }
+
+        let started = Date()
+        let deadline = started.addingTimeInterval(config.modelTimeout)
+        while Date() < deadline {
+            try await Task.sleep(for: .seconds(config.modelPollInterval))
+            try Task.checkCancellation()
+
+            let poll = try decode(try await get(path: "\(path)/\(jobID)"))
+
+            switch poll.status?.lowercased() {
+            case "failed", "error", "cancelled":
+                throw WooError.aiFailed(poll.error ?? "Reconstruction failed.")
+            case "succeeded", "success", "done", "completed":
+                guard let finished = try await downloadModel(from: poll) else {
+                    throw WooError.aiFailed("Reconstruction finished without a model.")
+                }
+                progress(1)
+                return finished
+            default:
+                // Providers that report progress get to drive the bar. For the
+                // rest, creep toward 0.9 on elapsed time so the screen never
+                // looks stuck at zero — and never claims to be done.
+                let elapsed = Date().timeIntervalSince(started) / config.modelTimeout
+                progress(min(0.9, poll.progress ?? (0.02 + elapsed * 0.88)))
+            }
+        }
+
+        throw WooError.aiFailed("Reconstruction timed out after \(Int(config.modelTimeout))s.")
+    }
+
+    /// Pulls the mesh out of a response, whichever way it was handed over.
+    /// Returns nil when the response is only a job receipt.
+    private func downloadModel(from envelope: Envelope) async throws -> Model3DResult? {
+        let rawFormat = envelope.format ?? "usdz"
+        guard let format = Model3DAsset.Format.loadable(rawFormat) else {
+            throw WooError.aiFailed(
+                "The service returned a \(rawFormat) model, which iOS cannot open. Ask it for usdz."
+            )
+        }
+
+        if let encoded = envelope.model, let bytes = Data(base64Encoded: encoded), !bytes.isEmpty {
+            return Model3DResult(data: bytes, format: format)
+        }
+
+        guard let link = envelope.modelURL, let url = URL(string: link) else { return nil }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = config.timeout
+        let bytes = try await send(request)
+        guard !bytes.isEmpty else {
+            throw WooError.aiFailed("The downloaded model was empty.")
+        }
+        return Model3DResult(data: bytes, format: format)
     }
 
     public func generateSpin(
@@ -126,6 +203,19 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         }
     }
 
+    private func get(path: String) async throws -> Data {
+        guard let baseURL = config.baseURL else {
+            throw WooError.aiUnavailable("No AI base URL is configured yet.")
+        }
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = "GET"
+        request.timeoutInterval = config.timeout
+        if let apiKey = config.apiKey {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        return try await send(request)
+    }
+
     /// Continuation over `dataTask` rather than the async API: the same code
     /// then compiles on Linux, where WooKit's tests run.
     private func send(_ request: URLRequest) async throws -> Data {
@@ -169,6 +259,22 @@ public struct HTTPAIService: BackgroundRemovalService, GarmentExtractionService,
         let images: [String]?
         let image: String?
         let items: [Item]?
+
+        // Reconstruction jobs
+        let id: String?
+        let jobID: String?
+        let status: String?
+        let progress: Double?
+        let error: String?
+        let model: String?
+        let modelURL: String?
+        let format: String?
+
+        enum CodingKeys: String, CodingKey {
+            case images, image, items, id, status, progress, error, model, format
+            case jobID = "job_id"
+            case modelURL = "model_url"
+        }
     }
 
     private func decodeImages(_ data: Data) throws -> [ImageData] {

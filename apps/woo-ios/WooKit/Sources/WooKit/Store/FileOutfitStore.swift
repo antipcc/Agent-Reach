@@ -53,7 +53,7 @@ public actor FileOutfitStore: OutfitStore {
 
         let data = try Data(contentsOf: libraryFile)
         do {
-            let snapshot = try Self.decoder.decode(LibrarySnapshot.self, from: data)
+            let snapshot = try LibraryCoding.decoder.decode(LibrarySnapshot.self, from: data)
             cached = snapshot
             return snapshot
         } catch {
@@ -154,21 +154,8 @@ public actor FileOutfitStore: OutfitStore {
     /// intact rather than a half-written file.
     private func persist(_ snapshot: LibrarySnapshot) throws {
         try ensureDirectories()
-        let data = try Self.encoder.encode(snapshot)
+        let data = try LibraryCoding.encoder.encode(snapshot)
         try data.write(to: libraryFile, options: .atomic)
         cached = snapshot
     }
-
-    private static let encoder: JSONEncoder = {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        return encoder
-    }()
-
-    private static let decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
 }

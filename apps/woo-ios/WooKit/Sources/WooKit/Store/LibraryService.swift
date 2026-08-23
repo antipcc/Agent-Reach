@@ -110,7 +110,58 @@ public actor LibraryService {
 
     // MARK: - 360°
 
-    /// Generates the turnaround and attaches it to the look.
+    /// What "Create 360°" runs. Reconstructs a mesh when a reconstruction
+    /// service is available, and falls back to the frame ring when it is not,
+    /// so a provider configured only for frames still produces a turnaround.
+    @discardableResult
+    public func generateTurnaround(
+        for outfitID: UUID,
+        progress: @escaping ProgressHandler = { _ in }
+    ) async throws -> Outfit {
+        do {
+            return try await generateModel(for: outfitID, progress: progress)
+        } catch WooError.aiUnavailable {
+            return try await generateSpin(for: outfitID, progress: progress)
+        }
+    }
+
+    /// Reconstructs the mesh and attaches it to the look, replacing any
+    /// earlier one and cleaning up after it.
+    @discardableResult
+    public func generateModel(
+        for outfitID: UUID,
+        progress: @escaping ProgressHandler = { _ in }
+    ) async throws -> Outfit {
+        let snapshot = try await store.load()
+        guard var outfit = snapshot.outfits.first(where: { $0.id == outfitID }) else {
+            throw WooError.outfitNotFound(outfitID)
+        }
+
+        // The cutout, not the original: a reconstruction has no use for the
+        // room behind the subject, and every provider charges by the pixel.
+        let cutout = ImageData(
+            data: try await store.readAsset(outfit.cutout),
+            format: outfit.cutout.inferredFormat
+        )
+        let result = try await provider.modelGeneration.generateModel(from: cutout, progress: progress)
+
+        let ref = AssetRef.generated(prefix: "model", ext: result.format.fileExtension)
+        try await store.writeAsset(result.data, ref: ref)
+
+        let previous = outfit.model?.file
+        outfit.model = Model3DAsset(
+            file: ref,
+            format: result.format,
+            isPlaceholder: result.isPlaceholder
+        )
+        try await store.updateOutfit(outfit)
+        if let previous {
+            await store.deleteAsset(previous)
+        }
+        return outfit
+    }
+
+    /// Generates the frame-ring turnaround and attaches it to the look.
     @discardableResult
     public func generateSpin(
         for outfitID: UUID,

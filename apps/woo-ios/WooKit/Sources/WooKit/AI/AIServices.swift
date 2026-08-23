@@ -49,7 +49,34 @@ public struct SpinResult: Hashable, Sendable {
     }
 }
 
-/// Generates the turnaround the home card scrubs through.
+/// A reconstructed mesh, as the bytes of a file iOS can open.
+public struct Model3DResult: Hashable, Sendable {
+    public var data: Data
+    public var format: Model3DAsset.Format
+    /// Set by the mock so the UI can say the mesh is a stand-in.
+    public var isPlaceholder: Bool
+
+    public init(data: Data, format: Model3DAsset.Format, isPlaceholder: Bool = false) {
+        self.data = data
+        self.format = format
+        self.isPlaceholder = isPlaceholder
+    }
+}
+
+/// Reconstructs a 3D model of the look from a single photo — what "Create
+/// 360°" now produces.
+///
+/// Reconstruction is slow (tens of seconds) and job-based at every provider
+/// worth using, hence the progress handler rather than a bare return.
+public protocol ModelGenerationService: Sendable {
+    func generateModel(
+        from image: ImageData,
+        progress: @escaping ProgressHandler
+    ) async throws -> Model3DResult
+}
+
+/// Generates the frame-ring turnaround, kept as the fallback for when no
+/// reconstruction endpoint is configured.
 public protocol SpinService: Sendable {
     func generateSpin(
         from image: ImageData,
