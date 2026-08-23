@@ -117,6 +117,10 @@ struct SeasonWatermark: View {
                 .font(Theme.Font.watermark(size: proxy.size.width * 0.26))
                 .tracking(proxy.size.width * 0.01)
                 .foregroundStyle(Theme.Palette.watermark)
+                // One line, at its natural width — wider than the screen for a
+                // six-letter season, and clipped at both edges on purpose.
+                .lineLimit(1)
+                .fixedSize()
                 .frame(maxWidth: .infinity)
                 .padding(.top, proxy.size.height * 0.06)
         }

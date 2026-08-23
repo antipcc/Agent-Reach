@@ -91,9 +91,11 @@ struct ModelTurnaroundView: UIViewRepresentable {
             let camera = SCNNode()
             camera.camera = SCNCamera()
             camera.camera?.zNear = 0.01
-            // The figure is normalized to one unit tall, so this framing holds
+            camera.camera?.projectionDirection = .vertical
+            // The figure is normalized to one unit tall and the field of view
+            // is now vertical, so it fills about two thirds of the card
             // whatever scale the provider happened to export in.
-            camera.position = SCNVector3(0, 0, 1.9)
+            camera.position = SCNVector3(0, 0, 1.35)
             scene.rootNode.addChildNode(camera)
 
             return Built(scene: scene, turntable: turntable, camera: camera)
