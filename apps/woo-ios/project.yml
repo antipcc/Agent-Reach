@@ -34,9 +34,11 @@ targets:
         UIUserInterfaceStyle: Light
         NSCameraUsageDescription: Woo 用相机拍下你今天穿的这一套。
         NSPhotoLibraryAddUsageDescription: Woo 会把生成的造型保存到你的相册。
+    configFiles:
+      Debug: Signing.xcconfig
+      Release: Signing.xcconfig
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.woo.Woo
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"

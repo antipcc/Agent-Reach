@@ -8,3 +8,6 @@ DerivedData/
 
 # Real model endpoints and keys never belong in the repo
 Woo/AIConfig.plist
+
+# Your signing identity — see Local.xcconfig.example
+Local.xcconfig

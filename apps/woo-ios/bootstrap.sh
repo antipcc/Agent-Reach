@@ -19,6 +19,20 @@ fi
 xcodegen generate
 echo "Generated Woo.xcodeproj"
 
+if [[ ! -f Local.xcconfig ]]; then
+  cat <<'NOTE'
+
+⚠️  No Local.xcconfig — this project will not install on a device.
+
+    cp Local.xcconfig.example Local.xcconfig
+    # then edit it: your own bundle id, and your Team ID from
+    # Xcode → Settings → Accounts
+
+    Set them there rather than in Xcode's Signing pane: this script
+    regenerates the project, and anything set in the pane is lost.
+NOTE
+fi
+
 if [[ "${1:-}" != "--no-open" ]]; then
   open Woo.xcodeproj
 fi

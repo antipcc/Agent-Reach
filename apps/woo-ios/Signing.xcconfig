@@ -1,0 +1,15 @@
+// Build settings that survive `./bootstrap.sh`.
+//
+// The Xcode project is generated from project.yml, so anything set through
+// Xcode's Signing & Capabilities pane is wiped the next time it regenerates.
+// Settings live here instead, in a file the generated project only references.
+//
+// Do not put your team id in this file — it is checked in. Create
+// Local.xcconfig next to it (gitignored) and override there; see
+// Local.xcconfig.example.
+
+PRODUCT_BUNDLE_IDENTIFIER = app.woo.Woo
+CODE_SIGN_STYLE = Automatic
+
+// Optional, and absent by default — the `?` means a missing file is fine.
+#include? "Local.xcconfig"

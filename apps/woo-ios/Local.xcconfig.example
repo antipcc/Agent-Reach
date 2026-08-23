@@ -1,0 +1,14 @@
+// Copy to Local.xcconfig and fill in. That file is gitignored, so your team
+// id stays on your machine and survives every ./bootstrap.sh.
+//
+//   cp Local.xcconfig.example Local.xcconfig
+//
+// DEVELOPMENT_TEAM is the 10-character Team ID from
+// Xcode → Settings → Accounts → your Apple ID → the team's ID column.
+//
+// The bundle identifier must be globally unique across Apple's systems, so
+// the checked-in default cannot be used for device builds — put your own
+// reverse-domain prefix on it.
+
+PRODUCT_BUNDLE_IDENTIFIER = com.yourname.woo
+DEVELOPMENT_TEAM = ABCDE12345
