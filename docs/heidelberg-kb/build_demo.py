@@ -11,7 +11,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -73,7 +75,7 @@ def build_payload() -> dict[str, Any]:
 
 
 TEMPLATE = r"""<title>海德堡排故台</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+__FONTS__
 <style>
 :root{
   --bg:#EEF0F0; --surface:#FFFFFF; --surface-2:#E4E7E7; --sunk:#E9ECEC;
@@ -1467,18 +1469,53 @@ init();
 """
 
 
+# Google Fonts 在中国大陆不可达。默认改为非阻塞加载：拿不到就立刻用系统字体渲染，
+# 绝不让首屏等待一个必然超时的请求。--no-webfonts 则完全不发这个请求。
+FONT_LINK = (
+    '<link rel="stylesheet" media="print" onload="this.media=\'all\'" '
+    'href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700'
+    '&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">'
+)
+
+
+def customer_banner(name: str, build_id: str) -> str:
+    """给单个客户的授权标识。让分发可追溯，且看起来是为他定制的。"""
+    return f'''<style>
+.lic{{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--ink-3);padding:7px 16px;background:var(--sunk);
+  border-bottom:1px solid var(--line);letter-spacing:.02em}}
+.lic b{{color:var(--ink-2);font-weight:600}}
+</style>
+<div class="lic"><span>授权给 <b>{name}</b> 内部使用</span><span class="mono">{build_id}</span></div>'''
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-o", "--out", type=Path, default=KB_DIR / "demo.html")
+    parser.add_argument("--customer", help="客户名称，生成带授权标识的专属版本")
+    parser.add_argument("--no-webfonts", action="store_true",
+                        help="完全不请求 Google Fonts，生成零外部请求的版本")
     args = parser.parse_args()
 
     payload = json.dumps(build_payload(), ensure_ascii=False, separators=(",", ":"))
     # 防止数据中出现的 "</script>" 提前闭合脚本块
     payload = payload.replace("<", "\\u003c")
 
-    args.out.write_text(TEMPLATE.replace("__DATA__", payload), encoding="utf-8")
+    html = TEMPLATE.replace("__DATA__", payload)
+    html = html.replace("__FONTS__", "" if args.no_webfonts else FONT_LINK)
+
+    if args.customer:
+        build_id = datetime.now().strftime("%Y%m%d") + "-" + \
+            hashlib.sha1(args.customer.encode("utf-8")).hexdigest()[:6]
+        banner = customer_banner(args.customer, build_id)
+        # 插在 <header> 之前，任何页签都能看到
+        html = html.replace("<header>", banner + "\n<header>", 1)
+
+    args.out.write_text(html, encoding="utf-8")
     size = args.out.stat().st_size
-    print(f"已生成 {args.out}（{size / 1024:.1f} KB）")
+    tag = f"，授权 {args.customer}" if args.customer else ""
+    ext = "无外部请求" if args.no_webfonts else "字体非阻塞加载"
+    print(f"已生成 {args.out}（{size / 1024:.1f} KB，{ext}{tag}）")
     return 0
 
 

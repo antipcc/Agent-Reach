@@ -39,7 +39,7 @@ def build_payload() -> dict[str, Any]:
 
 
 TEMPLATE = r"""<title>口述录入台</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
 <style>
 :root{
   --bg:#E9EAE7; --surface:#FFFFFF; --sunk:#F1F2EF; --line:#CFD2CC;

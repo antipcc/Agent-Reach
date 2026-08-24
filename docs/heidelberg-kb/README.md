@@ -193,3 +193,22 @@ python docs/heidelberg-kb/build_capture.py     # 生成 capture.html
 - **记录录入耗时**（`capture_seconds`），用来观察熟练后一条要多久。
 
 导出的 JSON 结构与 `submissions.json` 的投稿一致，放进队列跑一遍 `validate.py` 即可并入。
+
+---
+
+## 交付给客户
+
+**claude.ai 在中国大陆访问不了**，因此 Artifact 链接只能用作内部预览，不能作为交付渠道。`demo.html` 是零外部依赖的单文件，放在任何主机上都能跑。
+
+```bash
+# 交付版：零外部请求，适合放国内主机或直接发给客户
+python docs/heidelberg-kb/build_demo.py --no-webfonts -o dist/index.html
+
+# 客户专属版：带授权标识与构建号，分发可追溯
+python docs/heidelberg-kb/build_demo.py --customer "华东包装印刷" --no-webfonts \
+  -o dist/huadong.html
+```
+
+**字体处理**：Google Fonts 在中国大陆不可达，默认构建已改为非阻塞加载（`media="print"` + `onload`），拿不到就立刻用系统字体渲染。实测外网全断时内容 252ms 可见；`--no-webfonts` 则完全不发这个请求，161ms 可见。交付给客户一律用 `--no-webfonts`。
+
+**`--customer` 的作用**：在页眉插入「授权给 XX 内部使用」与一个由客户名派生的构建号。它不是访问控制——单文件页面做不到真正的鉴权——但它让每份分发可追溯，泄露时能定位来源，同时对客户显得是专门为他做的。真正的鉴权需要后端，等有付费客户后再做。
