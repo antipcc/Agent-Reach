@@ -1,0 +1,643 @@
+<title>海德堡排故台</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#EEF0F0; --surface:#FFFFFF; --surface-2:#E4E7E7; --sunk:#E9ECEC;
+  --ink:#171A1C; --ink-2:#535A5F; --ink-3:#848B90; --line:#D3D8D8;
+  --accent:#0B6076; --accent-ink:#FFFFFF; --accent-soft:#DBEAEF;
+  --stop:#A82A20; --stop-bg:#FAE7E4; --warn:#7E5504; --warn-bg:#F9EFD8;
+  --ok:#17603A; --ok-bg:#DFEEE5; --mono-bg:#E8ECEC;
+  --rail:#C6CCCC;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121517; --surface:#1B1F21; --surface-2:#232829; --sunk:#171B1D;
+    --ink:#E9E8E3; --ink-2:#A5ABAF; --ink-3:#787E83; --line:#2F3538;
+    --accent:#63B7CE; --accent-ink:#0A1E26; --accent-soft:#16303A;
+    --stop:#EFA098; --stop-bg:#361B18; --warn:#E2BC77; --warn-bg:#2F2513;
+    --ok:#8CCCA5; --ok-bg:#152E1F; --mono-bg:#232A2C;
+    --rail:#3A4144;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121517; --surface:#1B1F21; --surface-2:#232829; --sunk:#171B1D;
+  --ink:#E9E8E3; --ink-2:#A5ABAF; --ink-3:#787E83; --line:#2F3538;
+  --accent:#63B7CE; --accent-ink:#0A1E26; --accent-soft:#16303A;
+  --stop:#EFA098; --stop-bg:#361B18; --warn:#E2BC77; --warn-bg:#2F2513;
+  --ok:#8CCCA5; --ok-bg:#152E1F; --mono-bg:#232A2C;
+  --rail:#3A4144;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased;
+}
+.lat{font-family:"Barlow Semi Condensed","Noto Sans SC",sans-serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.wrap{max-width:840px;margin:0 auto;padding:0 16px 72px}
+
+/* ── 页眉 ───────────────────────────── */
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{max-width:840px;margin:0 auto;padding:12px 16px 0}
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mark{width:26px;height:26px;flex:none;display:grid;grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;gap:1.5px;border-radius:3px;overflow:hidden}
+.mark i{display:block}
+.brand h1{font-size:17px;font-weight:700;margin:0;letter-spacing:.01em}
+.brand .sub{font-size:11.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;font-weight:600}
+
+.picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.picker label{font-size:12px;letter-spacing:.1em;color:var(--ink-3);font-weight:600}
+select{
+  font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:5px;padding:6px 10px;max-width:100%;
+}
+.csys{font-size:11.5px;color:var(--accent);background:var(--accent-soft);
+  padding:3px 8px;border-radius:3px;font-weight:600}
+
+nav{display:flex;gap:2px;overflow-x:auto;margin-top:4px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{
+  padding:10px 14px 9px;font-size:14px;font-weight:500;color:var(--ink-2);
+  border-bottom:2px solid transparent;white-space:nowrap;flex:none;
+}
+nav button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent)}
+nav button:hover{color:var(--ink)}
+
+/* ── 过滤提示 ───────────────────────── */
+.notice{
+  display:flex;gap:9px;align-items:flex-start;margin:14px 0;padding:10px 13px;
+  background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;
+  font-size:13px;line-height:1.65;color:var(--ink);
+}
+.notice b{font-weight:700}
+
+/* ── 纸路筛选条 ─────────────────────── */
+.path{position:relative;margin:16px 0 4px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.path::-webkit-scrollbar{display:none}
+.path-inner{display:flex;align-items:center;gap:6px;position:relative;width:max-content;padding:2px}
+.path-inner::before{
+  content:"";position:absolute;left:12px;right:12px;top:50%;height:1px;
+  background:var(--rail);z-index:0;
+}
+.chip{
+  position:relative;z-index:1;font-size:13px;padding:5px 12px;border-radius:14px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);white-space:nowrap;
+}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.chip .n{font-size:11px;opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}
+.path-div{position:relative;z-index:1;width:1px;height:18px;background:var(--rail);margin:0 6px;flex:none}
+
+.search{
+  width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:6px;padding:10px 13px;margin:12px 0 0;
+}
+.search::placeholder{color:var(--ink-3)}
+
+.count{font-size:12.5px;color:var(--ink-3);margin:12px 0 8px;letter-spacing:.02em}
+
+/* ── 卡片 ───────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;
+  margin-bottom:8px;overflow:hidden;
+}
+.card.stop{border-left:3px solid var(--stop)}
+.card.warning{border-left:3px solid var(--warn)}
+.card.info{border-left:3px solid var(--rail)}
+.card-hd{width:100%;display:block;text-align:left;padding:12px 14px}
+.card-hd:hover{background:var(--sunk)}
+.row1{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.code{font-size:13.5px;font-weight:600;letter-spacing:.04em;color:var(--accent)}
+.ttl{font-size:15px;font-weight:600;line-height:1.5;margin:2px 0 0}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:7px}
+
+.pill{font-size:11px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:3px}
+.pill.stop{background:var(--stop-bg);color:var(--stop)}
+.pill.warning{background:var(--warn-bg);color:var(--warn)}
+.pill.info{background:var(--surface-2);color:var(--ink-2)}
+.tag{font-size:11.5px;color:var(--ink-2);border:1px solid var(--line);padding:2px 7px;border-radius:3px}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.tag.stop{color:var(--stop);border-color:var(--stop)}
+.eta{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* 置信度徽标——本产品的核心差异点，给它独立的视觉语言 */
+.conf{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+  padding:2px 7px;border-radius:3px;letter-spacing:.04em}
+.conf.verified{background:var(--accent);color:var(--accent-ink)}
+.conf.reported{background:transparent;color:var(--ink-2);border:1px dashed var(--line)}
+
+.body{padding:0 14px 14px;border-top:1px solid var(--line);margin-top:2px;padding-top:12px}
+.body p{margin:0 0 10px}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--ink-3);
+  text-transform:uppercase;margin:14px 0 6px}
+.steps{margin:0;padding-left:1.35em}
+.steps li{margin:5px 0}
+.steps li::marker{color:var(--accent);font-weight:600}
+
+.cause{display:flex;gap:10px;padding:9px 0;border-top:1px dashed var(--line)}
+.cause:first-of-type{border-top:none}
+.lk{flex:none;width:34px;padding-top:3px}
+.lkbar{display:flex;gap:2px;margin-bottom:2px}
+.lkbar i{width:8px;height:3px;border-radius:1px;background:var(--surface-2);display:block}
+.lkbar i.on{background:var(--accent)}
+.lktxt{font-size:10px;color:var(--ink-3);letter-spacing:.05em}
+.cause-b{flex:1;min-width:0}
+.cause-b .c{font-weight:600;font-size:14px}
+.cause-b .f{font-size:13.5px;color:var(--ink-2);margin-top:2px}
+
+.safety{background:var(--stop-bg);border:1px solid var(--stop);border-radius:5px;
+  padding:10px 12px;margin:12px 0;font-size:13.5px;color:var(--ink)}
+.safety b{color:var(--stop);display:block;font-size:11px;letter-spacing:.14em;margin-bottom:4px}
+.note{background:var(--sunk);border-radius:5px;padding:10px 12px;font-size:13.5px;
+  color:var(--ink-2);margin:10px 0}
+
+.srcs{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+.srcs .lbl{margin:0 0 6px}
+.srclist{display:flex;flex-wrap:wrap;gap:6px}
+.srclist a{
+  font-size:12px;text-decoration:none;color:var(--ink-2);background:var(--sunk);
+  border:1px solid var(--line);border-radius:3px;padding:3px 8px;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.srclist a:hover{color:var(--accent);border-color:var(--accent)}
+.srclist a::after{content:" ↗";opacity:.5}
+
+/* ── 付费墙 ─────────────────────────── */
+.lock{padding:14px;text-align:center;background:var(--sunk)}
+.lock .t{font-size:14px;font-weight:600;margin-bottom:3px}
+.lock .d{font-size:12.5px;color:var(--ink-3);margin-bottom:10px}
+.lock button{background:var(--accent);color:var(--accent-ink);font-size:13.5px;font-weight:600;
+  padding:8px 20px;border-radius:5px}
+.lock .ph{font-size:11px;color:var(--ink-3);margin-top:8px;letter-spacing:.04em}
+
+/* ── 引导诊断 ───────────────────────── */
+.step{font-size:11px;letter-spacing:.16em;color:var(--ink-3);font-weight:700;margin:18px 0 8px}
+.q{font-size:18px;font-weight:700;margin:0 0 4px}
+.qd{font-size:13.5px;color:var(--ink-2);margin:0 0 14px}
+.opt{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:6px;padding:13px 15px;margin-bottom:7px;font-size:15px;font-weight:500}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .sm{display:block;font-size:12.5px;color:var(--ink-3);font-weight:400;margin-top:2px}
+.back{font-size:13px;color:var(--accent);margin-bottom:4px;padding:4px 0}
+
+/* ── 保养 ───────────────────────────── */
+.chk{display:flex;gap:11px;align-items:flex-start;background:var(--surface);
+  border:1px solid var(--line);border-radius:7px;padding:12px 14px;margin-bottom:7px}
+.chk input{width:19px;height:19px;flex:none;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.chk .t{font-size:15px;font-weight:600}
+.chk.done .t{color:var(--ink-3);text-decoration:line-through}
+.chk .d{font-size:13.5px;color:var(--ink-2);margin-top:2px}
+.chk .spec{font-size:13px;color:var(--ink);background:var(--sunk);border-radius:4px;
+  padding:7px 10px;margin-top:7px;font-variant-numeric:tabular-nums}
+.progress{font-size:13px;color:var(--ink-2);margin:12px 0 4px;font-variant-numeric:tabular-nums}
+.lube{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.lube span{display:inline-flex;align-items:center;gap:6px;font-size:13px;border:1px solid var(--line);
+  border-radius:4px;padding:5px 10px;background:var(--surface)}
+.dot{width:11px;height:11px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.18)}
+
+/* ── 关于 ───────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:14px 0}
+.stat{background:var(--surface);padding:11px 12px}
+.stat .v{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .k{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:13px 15px;margin-bottom:8px}
+.rule h4{margin:0 0 5px;font-size:14.5px}
+.rule p{margin:0;font-size:13.5px;color:var(--ink-2)}
+h3.sec{font-size:16px;margin:26px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
+.srcrow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.srcrow .ty{flex:none;font-size:10.5px;letter-spacing:.08em;color:var(--ink-3);
+  text-transform:uppercase;width:62px;padding-top:3px;font-weight:600}
+.srcrow a{text-decoration:none}
+.srcrow a:hover{text-decoration:underline}
+.foot{font-size:12.5px;color:var(--ink-3);line-height:1.75;margin-top:22px;
+  padding-top:14px;border-top:1px solid var(--line)}
+.empty{text-align:center;color:var(--ink-3);font-size:14px;padding:36px 12px}
+[hidden]{display:none !important}
+</style>
+
+<header>
+  <div class="hd">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <i style="background:#00A0D2"></i><i style="background:#D6006E"></i>
+        <i style="background:#F0C400"></i><i style="background:#22201E"></i>
+      </span>
+      <h1>海德堡排故台</h1>
+      <span class="sub lat">Field Diagnostics</span>
+    </div>
+    <div class="picker">
+      <label class="lat" for="machine">MACHINE</label>
+      <select id="machine"></select>
+      <span class="csys" id="csys"></span>
+    </div>
+    <nav id="tabs" role="tablist"></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="notice" class="notice" hidden></div>
+  <main id="view"></main>
+</div>
+
+<script>
+const D = {"sources":{"pp-hak-102-8p":{"id":"pp-hak-102-8p","title":"Error code HAK in CPtronic of HEIDELBERG SPEEDMASTER 102 8-P","url":"https://printplanet.com/threads/error-code-hak-in-cptronic-of-heidelberg-speedmaster-102-8-p.17784/","type":"forum","lang":"en","accessed":"2026-08-24","note":"HAK 含义与槽位编号、十六进制自检码读法的主要出处"},"pp-eak-ffdf":{"id":"pp-eak-ffdf","title":"Error code EAK 03, EAK 12 is FFDF","url":"https://printplanet.com/threads/error-code-eak-03-eak-12-is-ffdf.17834/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-hak-ltk":{"id":"cpf-hak-ltk","title":"Error Code at HAK and LTK","url":"https://www.colorprintingforum.com/threads/error-code-at-hak-and-ltk.9173/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-102fl-eak-hak":{"id":"cpf-102fl-eak-hak","title":"Heidelberg 102FL Eak and Hak error","url":"https://www.colorprintingforum.com/threads/heidelberg-102fl-eak-and-hak-error.22748/","type":"forum","lang":"en","accessed":"2026-08-24","note":"EAK 为各机组开关检测卡、电气柜内最多 6 块的出处"},"cpf-sm74-blt-con":{"id":"cpf-sm74-blt-con","title":"Heidelberg SM74 ErrorTTK and BLT con","url":"https://www.colorprintingforum.com/threads/heidelberg-sm74-errorttk-and-blt-con.21526/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-sm102-blt-active":{"id":"cpf-sm102-blt-active","title":"Heidelberg SM 102-5 CP2000 – Intermittent Controlled Stop Without Error / BLT Active H1 Yellow Goes OFF","url":"https://www.colorprintingforum.com/threads/heidelberg-sm-102-5-cp2000-intermittent-controlled-stop-without-error-blt-active-h1-yellow-goes-off.26112/","type":"forum","lang":"en","accessed":"2026-08-24","note":"BLT5/MSK3/SMM4/UVM3/KVT/TTK 板卡族、SMM4/BLT 回路元件失效案例"},"cpf-sm74-register-bek":{"id":"cpf-sm74-register-bek","title":"SM74 with CP2000 Register Fault","url":"https://www.colorprintingforum.com/threads/sm74-with-cp2000-register-fault.13290/","type":"forum","lang":"en","accessed":"2026-08-24","note":"更换 BEK 板上失效 EPROM 解决套准故障的案例"},"cpf-cp2000-comms-lost":{"id":"cpf-cp2000-comms-lost","title":"Heidelberg CP2000 communications with press lost","url":"https://www.colorprintingforum.com/threads/heidelberg-cp2000-communications-with-press-lost.7347/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-cp2000-computer-failure":{"id":"cpf-cp2000-computer-failure","title":"CP2000 computer failure","url":"https://www.colorprintingforum.com/threads/cp2000-computer-failure.16298/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-sm102-strange-errors":{"id":"cpf-sm102-strange-errors","title":"Heidelberg SM 102 Strange Errors","url":"https://www.colorprintingforum.com/threads/heidelberg-sm-102-strange-errors.17352/","type":"forum","lang":"en","accessed":"2026-08-24"},"pp-qm46-15-01":{"id":"pp-qm46-15-01","title":"Heidelberg QM46-1 Error 15-01","url":"https://printplanet.com/threads/heidelberg-qm46-1-error-15-01.10595/","type":"forum","lang":"en","accessed":"2026-08-24","note":"15-01 指向 MRK 主电机控制板"},"pp-cd74-electrical":{"id":"pp-cd74-electrical","title":"Electrical Error CD-74","url":"https://printplanet.com/threads/electrical-error-cd-74.8050/","type":"forum","lang":"en","accessed":"2026-08-24","note":"主电机 SLT 功率输出单元、SVT 连接单元"},"cpf-pm52-g10":{"id":"cpf-pm52-g10","title":"Printmaster 52 fault Code G-10","url":"https://www.colorprintingforum.com/threads/printmaster-52-fault-code-g-10.24193/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-pm52-2":{"id":"cpf-pm52-2","title":"Pm52-2","url":"https://www.colorprintingforum.com/threads/pm52-2.13536/","type":"forum","lang":"en","accessed":"2026-08-24","note":"特殊功能 56 调出错误码、01-01/01-02 代码格式"},"cpf-pm52-perfecting":{"id":"cpf-pm52-perfecting","title":"Heidelberg PM52-2 Perfecting Error","url":"https://www.colorprintingforum.com/threads/heidelberg-pm52-2-perfecting-error.17826/","type":"forum","lang":"en","accessed":"2026-08-24","note":"翻转换向时的 P2E / P21 / PO2 报错"},"cpf-inpress-error":{"id":"cpf-inpress-error","title":"Inpress center error","url":"https://www.colorprintingforum.com/threads/inpress-center-error.26080/","type":"forum","lang":"en","accessed":"2026-08-24","note":"XL 机型 Inpress / AutoRegister 通信故障排查"},"cpf-m600-ssk":{"id":"cpf-m600-ssk","title":"HEIDELBERG M600 CP Tronic SSK board problems","url":"https://www.colorprintingforum.com/threads/heidelberg-m600-cp-tronic-ssk-board-problems.17397/","type":"forum","lang":"en","accessed":"2026-08-24"},"cpf-mo-z-codes":{"id":"cpf-mo-z-codes","title":"I need error codes interpretation sheets for heidelberg mo-z, 1993 cp-tronic","url":"https://www.colorprintingforum.com/threads/i-need-error-codes-interpretation-sheets-for-heidelberg-mo-z-1993-cp-tronic.10134/","type":"forum","lang":"en","accessed":"2026-08-24"},"scribd-zsk2":{"id":"scribd-zsk2","title":"Heidelberg Error Codes Overview (ZSK2 Errors)","url":"https://www.scribd.com/document/599921986/ZSK2-Errors","type":"document","lang":"en","accessed":"2026-08-24"},"scribd-m600-cptronic":{"id":"scribd-m600-cptronic","title":"Z51508-01 M600 CPTronic Troubleshooting Guide","url":"https://www.scribd.com/document/708699570/Z51508-01-M600-CPTronic-Troubleshooting-Guide-1","type":"document","lang":"en","accessed":"2026-08-24"},"manualslib-sm102":{"id":"manualslib-sm102","title":"HEIDELBERG Speedmaster SM 102 Manual","url":"https://www.manualslib.com/manual/2028000/Heidelberg-Speedmaster-Sm-102.html","type":"manual","lang":"en","accessed":"2026-08-24","note":"前规、输纸台板等部件的清洁与更换规定"},"hdb-xl106-maint-l2":{"id":"hdb-xl106-maint-l2","title":"Print Media Performance & Training Center — Speedmaster XL 105/106 Maintenance Level 2","url":"https://www.heidelberg.com/us/media/local_media/services___training_and_consulting/pdf/pmptc-class-maintenance-level-2-105-106.pdf","type":"official","lang":"en","accessed":"2026-08-24"},"hdb-press-control":{"id":"hdb-press-control","title":"Press control systems for Speedmaster — HEIDELBERG","url":"https://www.heidelberg.com/global/en/print_and_packaging/products/offset_printing/press_control_systems/press_control_systems.jsp","type":"official","lang":"en","accessed":"2026-08-24"},"hdb-xl106":{"id":"hdb-xl106","title":"Speedmaster XL 106 — HEIDELBERG","url":"https://www.heidelberg.com/global/en/print_and_packaging/products/offset_printing/format_70_x_100/speedmaster_xl_106/product_information_12/product_information_20.jsp","type":"official","lang":"en","accessed":"2026-08-24"},"bisenet-common-faults":{"id":"bisenet-common-faults","title":"海德堡胶印机常见故障正确排除及维修","url":"http://bisenet.com/article/200812/43233.htm","type":"article","lang":"zh","accessed":"2026-08-24","note":"死牙、剥皮、飞达平行度、开牙滚子等条目的出处"},"bisenet-feeder-adjust":{"id":"bisenet-feeder-adjust","title":"必胜教你开机器（四）——正确调节飞达（海德堡部分2）","url":"http://bisenet.com/article/200412/9249.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-fountain-solution":{"id":"bisenet-fountain-solution","title":"胶印质量控制——润版液的使用","url":"http://bisenet.com/article/200604/15673.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-ph-control":{"id":"bisenet-ph-control","title":"印刷中润版液PH值的控制","url":"http://bisenet.com/article/201208/118112.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-plate-life":{"id":"bisenet-plate-life","title":"导致印版耐印力降低的原因分析","url":"http://bisenet.com/article/200907/53453.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-roller-care":{"id":"bisenet-roller-care","title":"四色印刷机墨辊的保养须知","url":"http://bisenet.com/article/201209/119032.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-static":{"id":"bisenet-static","title":"五种方法祛除印刷纸张静电现象","url":"http://bisenet.com/article/201209/119037.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-water-unit":{"id":"bisenet-water-unit","title":"掌握调节胶印机输水机构，水墨平衡问题一扫空","url":"http://bisenet.com/article/201505/148799.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"bisenet-maintenance":{"id":"bisenet-maintenance","title":"海德堡：规范操作和保养筑就增值之路","url":"http://bisenet.com/article/201101/92044.htm","type":"article","lang":"zh","accessed":"2026-08-24"},"cnzhixiang-common-faults":{"id":"cnzhixiang-common-faults","title":"海德堡胶印机常见故障以及排除","url":"https://www.cnzhixiang.com/mobile/yinshua/jishu/3/11295.html","type":"article","lang":"zh","accessed":"2026-08-24"},"cnzhixiang-maintenance":{"id":"cnzhixiang-maintenance","title":"海德堡胶印机日常维护保养项目","url":"https://www.cnzhixiang.com/yinshua/jishu/1/4694.html","type":"article","lang":"zh","accessed":"2026-08-24","note":"黄/蓝/绿油嘴周期、日周月保养项目"},"cnzhixiang-feeder-faults":{"id":"cnzhixiang-feeder-faults","title":"输纸机输纸故障的分析与排除","url":"https://www.cnzhixiang.com/mobile/yinshua/jishu/3/11067.html","type":"article","lang":"zh","accessed":"2026-08-24"},"cnzhixiang-control-systems":{"id":"cnzhixiang-control-systems","title":"海德堡印刷机CPC控制系统、CP-tronic系统、CP2000系统","url":"http://www.cnzhixiang.com/yinshua/jishu/3/11757.html","type":"article","lang":"zh","accessed":"2026-08-24"},"cnzhixiang-scuffing":{"id":"cnzhixiang-scuffing","title":"胶印常见异常及对策：蹭脏、鬼影、拉毛等","url":"https://www.cnzhixiang.com/yinshua/jishu/1/1030.html","type":"article","lang":"zh","accessed":"2026-08-24"},"sohu-100-cases":{"id":"sohu-100-cases","title":"海德堡印刷机维修故障分析100例(1-50)","url":"https://www.sohu.com/a/276039654_466833","type":"article","lang":"zh","accessed":"2026-08-24"},"sohu-bars":{"id":"sohu-bars","title":"平版胶印印刷机“水杠”与“墨杠”清理大全","url":"https://www.sohu.com/a/135597004_466833","type":"article","lang":"zh","accessed":"2026-08-24"},"sohu-maintenance":{"id":"sohu-maintenance","title":"海德堡印刷机维护保养日常","url":"https://www.sohu.com/a/168526699_483583","type":"article","lang":"zh","accessed":"2026-08-24"},"sina-roller-adjust":{"id":"sina-roller-adjust","title":"海德堡印刷机墨辊的调节","url":"https://blog.sina.com.cn/s/blog_bad1eca401019v41.html","type":"article","lang":"zh","accessed":"2026-08-24","note":"靠版墨辊 3~4mm 压杠、0.1mm 塞片校压的出处"},"sina-feeder-cases":{"id":"sina-feeder-cases","title":"海德堡飞达常见故障实例","url":"https://blog.sina.com.cn/s/blog_c6874d660101d4mi.html","type":"article","lang":"zh","accessed":"2026-08-24"},"sztcy-cd102":{"id":"sztcy-cd102","title":"海德堡SM CD-102四色胶印机常见故障及排除方法","url":"https://www.sztcy.com/inews_201004063.html","type":"article","lang":"zh","accessed":"2026-08-24","note":"吹气管位置开关移位导致安全检测报警并闷车的案例"},"ys2345-water-tank":{"id":"ys2345-water-tank","title":"海德堡印刷机水箱故障怎么办","url":"http://m.ys2345.com/ask/644.html","type":"article","lang":"zh","accessed":"2026-08-24"},"zzyinji-relocation-jams":{"id":"zzyinji-relocation-jams","title":"设备试机完好，运回厂区频繁卡纸的根源与解决办法","url":"https://www.zzyinji168.com/show-773.html","type":"article","lang":"zh","accessed":"2026-08-24"},"tpzd-boards":{"id":"tpzd-boards","title":"海德堡印刷机电路板维修（触摸屏 / IDEB 墨驱板 / KLM4 驱动板 / 维修案例）","url":"http://www.tpzd.com/case_view.asp?id=52","type":"vendor","lang":"zh","accessed":"2026-08-24","note":"第三方维修商公开的可修板卡清单，属商业信息，仅作参考"},"czkywx-cp2000-ipc":{"id":"czkywx-cp2000-ipc","title":"海德堡印刷机CP2000工控机电路板维修","url":"https://www.czkywx.com/dianlubanweixiu/51.html","type":"vendor","lang":"zh","accessed":"2026-08-24"}},"machines":[{"id":"gto-52","name":"GTO 52","format_zh":"小幅面","control_systems":["cpc"],"note_zh":"机械式为主，报错依赖指示灯与机械检查。"},{"id":"pm-52","name":"Printmaster PM 52","format_zh":"小幅面","control_systems":["cp-tronic"],"note_zh":"错误码经特殊功能 56 调出，格式为「机组-项目」两段码。","sources":["cpf-pm52-2"]},{"id":"qm-46","name":"Quickmaster QM 46","format_zh":"小幅面","control_systems":["cp-tronic"],"sources":["pp-qm46-15-01"]},{"id":"sm-52","name":"Speedmaster SM 52","format_zh":"小幅面","control_systems":["cp-tronic","cp2000"]},{"id":"sm-74","name":"Speedmaster SM 74","format_zh":"对开以下","control_systems":["cp-tronic","cp2000"],"sources":["cpf-sm74-blt-con","cpf-sm74-register-bek"]},{"id":"cd-74","name":"Speedmaster CD 74","format_zh":"对开以下","control_systems":["cp2000"],"sources":["pp-cd74-electrical"]},{"id":"sm-102","name":"Speedmaster SM 102","format_zh":"对开","control_systems":["cp-tronic","cp2000"],"sources":["manualslib-sm102","cpf-sm102-blt-active"]},{"id":"cd-102","name":"Speedmaster CD 102","format_zh":"对开","control_systems":["cp-tronic","cp2000"],"sources":["sztcy-cd102"]},{"id":"mo","name":"MO / MOZ","format_zh":"对开","control_systems":["cpc","cp-tronic"],"sources":["cpf-mo-z-codes"]},{"id":"xl-75","name":"Speedmaster XL 75","format_zh":"对开以下","control_systems":["prinect-press-center"]},{"id":"xl-105","name":"Speedmaster XL 105","format_zh":"大对开","control_systems":["cp2000","prinect-press-center"],"note_zh":"早期 XL 105 曾配 CP2000，后期改 Prinect Press Center；标注代码时必须区分。","sources":["hdb-xl106-maint-l2"]},{"id":"xl-106","name":"Speedmaster XL 106","format_zh":"大对开","control_systems":["prinect-press-center"],"note_zh":"现役机型，使用 Prinect Press Center，不使用 CP2000/CP-tronic——CP2000 或 CP Tronic 时代的板卡代码不适用于本机型。","sources":["hdb-xl106","hdb-xl106-maint-l2"]},{"id":"m-600","name":"Web Press M-600","format_zh":"卷筒","control_systems":["cp-tronic"],"sources":["scribd-m600-cptronic","cpf-m600-ssk"]}],"controlSystems":{"cpc":{"id":"cpc","name_zh":"CPC","name_en":"CPC","era":"1970s–1990s","desc_zh":"早期分体式墨量遥控系统，多见于 MO、KORD、老 SM 机型。","sources":["cnzhixiang-control-systems"]},"cp-tronic":{"id":"cp-tronic","name_zh":"CP-tronic","name_en":"CP-tronic (CPT)","era":"1990s–2000s","desc_zh":"模块化板卡 + 槽位编号的报错体系（HAK / EAK / SEK / LTK / SSK / ZSK 等），自检结果以十六进制显示。","sources":["cnzhixiang-control-systems","pp-hak-102-8p"]},"cp2000":{"id":"cp2000","name_zh":"CP2000","name_en":"CP2000 Center","era":"2000s–2010s","desc_zh":"触摸屏明文报警 + 服务诊断菜单，板卡族含 BLT / MSK / SMM / UVM / KVT / TTK / BEK 等。","sources":["cnzhixiang-control-systems","cpf-sm102-blt-active"]},"prinect-press-center":{"id":"prinect-press-center","name_zh":"Prinect Press Center","name_en":"Prinect Press Center / Press Center XL","era":"2010s–至今","desc_zh":"XL 系列现役控制台（Press Center XL 2/3/4 + Wallscreen），与 Prinect 工作流联网。","sources":["hdb-press-control","hdb-xl106"]}},"categories":{"feeder":"飞达 / 输纸","register":"前规 / 拉规 / 套准","transfer":"递纸 / 交接","unit":"印刷机组 / 滚筒","dampening":"润版","inking":"输墨","delivery":"收纸 / 喷粉","pneumatic":"气路 / 真空","drive":"主传动 / 驱动","electrical":"电气 / 板卡","safety":"安全回路","control":"控制台 / 通讯","lubrication":"润滑 / 温控","quality":"印刷质量"},"confidenceLevels":{"verified":{"id":"verified","name_zh":"已核实","desc_zh":"代码/含义在官方手册或多个独立公开来源中一致出现，且来源可点击验证。"},"reported":{"id":"reported","name_zh":"案例报告","desc_zh":"来自单一公开案例（论坛实帖、维修商案例、行业文章），方向可信但未经交叉验证，现场须自行确认。"},"unverified":{"id":"unverified","name_zh":"待核","desc_zh":"仅有二手转述、无法定位一手出处。禁止进入付费内容；仅作内部线索。"}},"fixableLevels":{"onsite":{"id":"onsite","name_zh":"现场可排","desc_zh":"机长或机组人员用随机工具即可处理，通常不需备件。"},"parts_needed":{"id":"parts_needed","name_zh":"需备件","desc_zh":"需更换易损件，取决于备件是否在库。"},"service_required":{"id":"service_required","name_zh":"需专业维修","desc_zh":"涉及电气柜内部、主传动、滚筒轴承等，应由受训人员或厂家/专业维修商处理。"}},"intervals":[{"id":"per_shift","name_zh":"每班"},{"id":"daily","name_zh":"每日"},{"id":"weekly","name_zh":"每周"},{"id":"monthly","name_zh":"每月"},{"id":"quarterly","name_zh":"每季"},{"id":"annual","name_zh":"每年"}],"faultCodes":[{"id":"cpt-hak","code":"HAK \u003c槽位号>","example":"HAK 4","title_zh":"辅助驱动板故障（槽位号 = 该板在电气柜中的位置）","category":"electrical","severity":"stop","control_systems":["cp-tronic"],"machines":["sm-102","cd-102","sm-74","mo","m-600"],"meaning_zh":"HAK 是辅助驱动（Hilfsantriebe）板卡族，控制机上的辅助驱动装置，一块 HAK 最多可管 6 路辅助驱动，因此各机配置数量不同。代码中的数字是槽位号，HAK 4 即第 4 槽位的那块板报错。","checks":["记录完整代码与其后的十六进制自检值，按十六进制读法定位到具体未通过的测试项。","断电后检查该槽位板卡的供电与所有接插件是否松动、氧化。","与同族其他槽位的 HAK 板互换位置，观察报错是否随板移动——随板走即板损，留在原槽即槽位/线束问题。","确认该 HAK 所管的辅助驱动装置本体（电机、限位）是否卡阻或短路，避免只换板不查负载。"],"confidence":"verified","sources":["pp-hak-102-8p","cpf-hak-ltk","cpf-102fl-eak-hak"],"notes_zh":"换板前务必拍照记录跳线与地址开关设定；同型号板在不同槽位承担不同功能。"},{"id":"cpt-eak","code":"EAK \u003c槽位号>","example":"EAK 03 / EAK 12","title_zh":"机组开关检测卡报错","category":"electrical","severity":"stop","control_systems":["cp-tronic"],"machines":["sm-102","cd-102","sm-74","mo"],"meaning_zh":"EAK 是负责巡检各机组全部开关信号的检测卡。根据机型与配置，电气柜内最多可装 6 块 EAK 卡。EAK 报错通常意味着它所监视的某个开关信号异常，而不一定是卡本身坏。","checks":["读取该 EAK 后的十六进制自检值，展开定位到具体异常的检测位。","顺着该检测位对应的开关（护罩行程开关、位置开关等）现场逐个确认动作是否到位、有无移位或被纸粉卡住。","检查开关到 EAK 卡的线束有无断线、接插件松动。","以上均正常再考虑 EAK 卡本身，用换槽对比法验证。"],"confidence":"verified","sources":["pp-eak-ffdf","cpf-102fl-eak-hak"],"notes_zh":"EAK 报错最常见的真实根因是开关位置漂移，而不是板卡损坏——先查现场再拆电气柜。"},{"id":"cpt-sek","code":"SEK","example":"主面板 SEK 符号闪烁","title_zh":"安全系统相关报警","category":"safety","severity":"stop","control_systems":["cp-tronic"],"machines":["sm-102","cd-102","sm-74"],"meaning_zh":"CP-tronic 主面板上 SEK 符号闪烁指向安全回路相关的检测异常。","checks":["逐个复位并确认所有急停按钮已旋出。","检查各护罩是否完全关闭到位、行程开关动作是否可靠。","检查光电人体检测装置是否被纸粉、油污遮挡或位置移位。","确认安全继电器回路供电正常。"],"confidence":"reported","sources":["pp-hak-102-8p"],"safety_zh":"严禁以短接、屏蔽安全开关的方式让机器“先跑起来”。安全回路只能修复，不能绕过。"},{"id":"cpt-ltk","code":"LTK","example":"LTK 报错 / LTK500 板损坏","title_zh":"润版（水辊）控制板报错","category":"dampening","severity":"stop","control_systems":["cp-tronic","cp2000"],"machines":["sm-102","cd-102","sm-74","sm-52"],"meaning_zh":"LTK 板卡族与润版/水辊驱动相关，LTK500 是国内维修市场上出现频率很高的一块水斗电机控制板。典型表现为水辊电机不转或转速不跟随机速。","checks":["先确认水辊电机本体与测速反馈是否正常，排除电机堵转、绒套缠死。","检查板卡供电与接插件。","确认润版箱水泵与液位正常，避免把供水系统故障误判为控制板故障。","确认为板卡损坏后，可元件级维修或整板更换。"],"confidence":"reported","sources":["cpf-hak-ltk","tpzd-boards","czkywx-cp2000-ipc"]},{"id":"cpt-ssk","code":"SSK","example":"M600 CP Tronic SSK board","title_zh":"SSK 板卡故障（卷筒机 M-600）","category":"electrical","severity":"stop","control_systems":["cp-tronic"],"machines":["m-600"],"meaning_zh":"SSK 是 M-600 卷筒机 CP-tronic 系统中的一块控制板，公开论坛有该板故障的讨论记录。","checks":["对照 M-600 CPTronic 排障手册（Z51508-01）中该板的诊断章节。","检查板卡供电与通讯接插件。","同族板换位对比验证。"],"confidence":"reported","sources":["cpf-m600-ssk","scribd-m600-cptronic"]},{"id":"cpt-zsk","code":"ZSK","example":"ZSK2 错误表","title_zh":"ZSK 板卡族错误","category":"electrical","severity":"stop","control_systems":["cp-tronic"],"machines":["sm-102","cd-102","mo"],"meaning_zh":"ZSK 是 CP-tronic 体系中的一个板卡族，公开流传有《Heidelberg Error Codes Overview（ZSK2 Errors）》对照文档，可按该文档逐位解读。","checks":["取得 ZSK2 错误对照文档，按代码逐条比对。","按板卡族 + 槽位规则定位到具体板卡。","先查供电与接插件，再换槽对比。"],"confidence":"reported","sources":["scribd-zsk2"]},{"id":"cp2000-s-blt-con","code":"S-BLT CON","example":"S-BLT_CON","title_zh":"BLT 控制不就绪","category":"unit","severity":"stop","control_systems":["cp2000"],"machines":["sm-74","sm-102","cd-102"],"meaning_zh":"CP2000 体系中 BLT 相关控制回路未进入就绪状态。公开案例指出两种典型情形：中央控制/CP2000 主动撤销了 BLT 使能信号，或 BLT 单元自身内部丢失了 READY/ACTIVE 状态。","checks":["检查各控制模块之间的通讯线缆有无破损、接插件松动——已有案例最终定位为一根损坏的通讯线。","检查 SMM4 / BLT 回路上的电子元件有无虚焊、脱落——已有案例为该回路上一个元件失效后修复解决。","观察报错是随机出现还是与某个动作（合压、离压、洗车）同步，据此缩小范围。","确认 BLT 单元的 READY/ACTIVE 指示状态，判断是被上位撤销还是自身丢失。"],"confidence":"verified","sources":["cpf-sm74-blt-con","cpf-sm102-blt-active"],"notes_zh":"CP2000 板卡族包含 BLT5 / MSK3 / SMM4 / UVM3 / KVT / TTK 等，排查时注意区分。本代码属 CP2000 世代，不适用于 XL 106 等 Prinect Press Center 机型。"},{"id":"cp2000-dynamic-test","code":"动态测试标志（圆圈 T）","example":"屏幕出现圆圈 T 图标","title_zh":"动态测试检出电子板故障","category":"electrical","severity":"warning","control_systems":["cp2000"],"machines":["sm-102","cd-102","sm-74","cd-74","sm-52"],"meaning_zh":"CP2000 的动态测试（Dynamic Test）是持续监测电子板状态的机制，出现该标志说明测试过程中检出了某块板的异常，需进服务诊断菜单读出具体板卡位置。","checks":["进入服务/诊断菜单，读出报错指向的具体板卡与位置。","检查该板供电与接插件。","查看错误历史记录，确认是偶发还是持续。"],"confidence":"reported","sources":["cnzhixiang-control-systems","cpf-sm102-strange-errors"]},{"id":"cp2000-register-fault-bek","code":"套准故障（Register Fault）","example":"SM74 CP2000 报套准故障","title_zh":"CP2000 套准故障（含 BEK 板 EPROM 失效案例）","category":"register","severity":"stop","control_systems":["cp2000"],"machines":["sm-74","sm-102","cd-102"],"meaning_zh":"CP2000 报套准相关故障。除机械与定位原因外，已有公开案例最终定位到电气柜内 BEK 板上的 EPROM 模块失效。","checks":["先排除机械与工艺原因：前规/侧规定位、叼牙死牙、纸张变形（见案例库对应条目）。","确认套准检测传感器清洁、位置未漂移。","机械与传感器均正常且报错持续时，检查 CP2000 电气柜内 BEK 板——已有案例通过更换该板上失效的 EPROM 模块解决。"],"confidence":"reported","sources":["cpf-sm74-register-bek"],"notes_zh":"顺序很重要：BEK 板 EPROM 是小概率的最终答案，绝大多数套准故障仍在机械与纸张一侧。"},{"id":"cp2000-comms-lost","code":"与印刷机通讯丢失","example":"communications with press lost","title_zh":"控制台与机器通讯中断","category":"control","severity":"stop","control_systems":["cp2000"],"machines":["sm-102","cd-102","sm-74","cd-74","sm-52"],"meaning_zh":"CP2000 控制台与机器本体之间的通讯链路中断，控制台无法读取或下达指令。","checks":["检查控制台与电气柜之间的通讯线缆及两端接插件。","检查网络/总线设备（交换机、终端电阻）供电与指示灯。","确认电气柜内相关通讯板卡供电正常。","按规程重启控制台一次，观察是否为软件性挂起。"],"confidence":"reported","sources":["cpf-cp2000-comms-lost","cpf-cp2000-computer-failure"]},{"id":"cp2000-ipc-failure","code":"控制台黑屏 / 死机 / 触摸失灵","example":"CP2000 工控机无法进系统","title_zh":"CP2000 工控机与显示器硬件故障","category":"control","severity":"stop","control_systems":["cp2000"],"machines":["sm-102","cd-102","sm-74","cd-74","sm-52"],"meaning_zh":"控制台不显示、无法进入系统、屏幕出线条或触摸无响应。国内第三方维修市场对 CP2000 工控机主板与触摸屏（如 CP.150.0338）有成熟的元件级维修能力。","checks":["先确认控制台供电与保险，排除外部供电问题。","区分是显示器故障还是工控机故障：接外部显示信号或观察开机自检有无输出。","检查板卡接插件是否松动、积尘。","确认为硬件损坏后送修或更换；送修前拍照记录接线与设定。"],"confidence":"reported","sources":["czkywx-cp2000-ipc","tpzd-boards","cpf-cp2000-computer-failure"],"notes_zh":"CP-tronic 老机型另需注意：主机板依赖后备电池保存参数，电池低电报警要及时更换，否则断电后参数与预置数据丢失。"},{"id":"cp2000-delivery-not-empty","code":"收纸处纸张未清空","example":"CD102-5 报收纸处纸张未清空","title_zh":"收纸区“纸张未清空”误报","category":"delivery","severity":"stop","control_systems":["cp2000"],"machines":["cd-102","sm-102"],"meaning_zh":"收纸区检测判定仍有纸张未清空而禁止启动。现场实际已清空时，多为该区域检测电眼脏污或位置漂移导致的误报。","checks":["先目视确认收纸区、链条牙排、导纸装置上确实无残留纸张或碎纸。","清洁收纸区检测电眼的发射与接收面（纸粉、喷粉堆积是主因）。","确认电眼位置未被碰移、反射板未脏污或移位。","以上均正常再查电眼放大器板与线路。"],"confidence":"reported","sources":["sztcy-cd102"]},{"id":"cp2000-safety-main-drive-lock","code":"人体进入安全检测 / 主传动装置锁定","example":"CD-102 同时报“吹气管位置错误”后闷车","title_zh":"安全检测触发主传动锁定（含吹气管开关移位案例）","category":"safety","severity":"stop","control_systems":["cp2000"],"machines":["cd-102","sm-102"],"meaning_zh":"安全检测系统判定有异常并锁定主传动。公开案例：CD-102 运行中显示“人体进入安全检测对主传动装置的锁定”与“吹气管位置错误”，初期不影响运行，约十分钟后突然闷车并追加报出开关柜与可信度（Plausibility）检测故障，最终确认为吹气管位置检测开关移位导致的误触发，调整开关位置后恢复正常。","checks":["立即处理，不要因为“暂不影响运行”而继续生产——该案例即由此升级为闷车锁机。","检查报警所指部位的位置检测开关（如吹气管、护罩、导纸装置）是否被碰移、松动。","检查光电人体检测装置的清洁度与对准。","调整或更换移位的开关后，完整走一遍安全功能确认。"],"confidence":"reported","sources":["sztcy-cd102"],"safety_zh":"安全类报警必须修复，严禁短接屏蔽。诊断期间临时屏蔽某些检测的，生产前必须全部恢复。"},{"id":"cpt-qm46-15-01","code":"15-01","example":"QM46-1 Error 15-01","title_zh":"主电机控制板（MRK）相关报错","category":"drive","severity":"warning","control_systems":["cp-tronic"],"machines":["qm-46"],"meaning_zh":"公开讨论指出该代码与 MRK（主驱动电机控制板）相关，通常并不代表严重问题。","checks":["确认机器实际运行是否受影响，区分是提示性报错还是真实故障。","检查 MRK 板供电与接插件。","检查主电机测速/位置反馈信号与线束。"],"confidence":"reported","sources":["pp-qm46-15-01"]},{"id":"pm52-g10","code":"G-10","example":"Printmaster 52 fault Code G-10","title_zh":"主电机自检未通过","category":"drive","severity":"stop","control_systems":["cp-tronic"],"machines":["pm-52"],"meaning_zh":"该代码与主电机执行的一项自检测试相关。公开讨论中指出主电机编码器失效是这类问题的常见原因。","checks":["检查主电机编码器是否脏污——可用压缩空气吹净后以异丙醇（IPA）清洗，公开案例中此法有效。","检查编码器线束与接插件。","手动盘车确认主传动无机械卡阻。","以上无效再考虑编码器或主驱动控制板更换。"],"confidence":"reported","sources":["cpf-pm52-g10"]},{"id":"pm52-perfector-errors","code":"P2E / P21 / PO2","example":"PM52-2 单面转翻转切换时报出","title_zh":"翻转（Perfecting）换向相关报错","category":"transfer","severity":"stop","control_systems":["cp-tronic"],"machines":["pm-52"],"meaning_zh":"PM52-2 在从单面印刷切换到翻转印刷的换向过程中报出的一组错误。","checks":["按规程完整执行一次换回单面印刷的换向程序，再重新换向——公开案例中此法可清除报错。","检查翻转装置的位置检测开关与机械定位是否到位。","确认换向操作的前置条件（机器位置、护罩状态）全部满足。"],"confidence":"reported","sources":["cpf-pm52-perfecting"]},{"id":"pm52-unit-guard-codes","code":"01-01 / 01-02（机组-项目两段码）","example":"01-01 = 第1机组输墨装置护罩 S4","title_zh":"机组护罩与装置检测码","category":"safety","severity":"stop","control_systems":["cp-tronic"],"machines":["pm-52"],"meaning_zh":"经特殊功能 56 调出的两段式代码，前两位为机组号，后两位为检测项。已知示例：01-01 对应第 1 机组输墨装置护罩 S4；01-02 对应第 1 机组版滚筒护罩 S3 或润湿装置 S3。","checks":["按机组号定位到具体印刷机组。","检查对应护罩是否关闭到位、行程开关（S3/S4）动作是否可靠。","检查开关线束与接插件。"],"confidence":"reported","sources":["cpf-pm52-2"],"notes_zh":"完整对照表需查本机随机资料；此处仅记录已公开确认的示例条目，其余项目请勿臆测。"},{"id":"cd74-slt-svt","code":"SLT / SVT","example":"CD-74 主电机相关电气故障","title_zh":"主电机功率变换单元相关故障","category":"drive","severity":"stop","control_systems":["cp2000"],"machines":["cd-74"],"meaning_zh":"公开讨论指出，CD-74 等机型的主电机相关电气故障可能来自 SLT（功率变换器输出单元）或 SVT（功率变换器连接元件）。","checks":["检查三相进线与输出端子是否松动、有无短路放电痕迹。","测量驱动输出电压三相是否平衡。","检查电机绝缘。","确认功率单元故障后由专业人员更换；反复过流不可盲目复位强开。"],"confidence":"reported","sources":["pp-cd74-electrical"],"safety_zh":"功率单元带高压，检修必须断电挂牌并等待母线电容泄放完毕。"},{"id":"prinect-inpress-comm","code":"Inpress / AutoRegister 通信故障","example":"XL 机型报颜色测量系统通信失败","title_zh":"联机测量系统通信中断","category":"control","severity":"warning","control_systems":["prinect-press-center"],"machines":["xl-106","xl-105","xl-75"],"meaning_zh":"Prinect Inpress Control / AutoRegister 联机测量系统与控制系统之间通信失败，表现为无法自动测量与自动套准。","checks":["检查测量系统控制盒上的 LED 指示状态。","检查控制盒到交换机的网线与接插件。","确认联机测量控制计算机是否正常启动运行。","确认测量装置本体清洁、无遮挡。"],"confidence":"reported","sources":["cpf-inpress-error"],"notes_zh":"这是少数确实属于 XL / Prinect 世代的报错条目——不要与 CP2000/CP-tronic 时代的板卡代码混列。"}],"decodingRules":[{"id":"rule-cpt-module-slot","applies_to":["cp-tronic"],"title_zh":"CP-tronic 代码 = 板卡族缩写 + 电气柜槽位号","body_zh":"CP-tronic 的报错前缀对应电路板的功能族，紧跟的数字是该板在电气柜中的槽位编号（如 HAK-02、HAK-03、HAK-04）。因此同一个前缀在不同机器上可能指向不同数量的板卡——每台机的配置要以本机电气图为准。定位到槽位后，优先检查该板的供电、接插件，并用同族好板换槽对比，再判定板卡损坏。","confidence":"verified","sources":["pp-hak-102-8p","cpf-hak-ltk"]},{"id":"rule-cpt-hex-selftest","applies_to":["cp-tronic"],"title_zh":"CP-tronic 自检结果的十六进制读法","body_zh":"自检结果以十六进制显示，每一位十六进制数字代表 4 项测试的结果位：F = 1111，表示这 4 项全部通过；0 表示故障或该位置无响应。因此 FFFF 表示全部 16 项测试通过。出现非 F 的位时，把该位展开成二进制即可定位到具体是哪几项测试未通过——例如 FFF5 展开末位 5 = 0101，说明该组 4 项测试中有 2 项异常。","confidence":"verified","sources":["pp-hak-102-8p","pp-eak-ffdf"]},{"id":"rule-pm52-func56","applies_to":["cp-tronic"],"machines":["pm-52"],"title_zh":"Printmaster 52 用特殊功能 56 调出错误码","body_zh":"PM 52 的错误码不在主画面常驻，需通过激活特殊功能 56 调出。代码为「机组-项目」两段式：前两位是机组号（01 = 第一印刷机组），后两位是具体检测项。例如 01-01 对应第 1 机组输墨装置护罩 S4，01-02 对应第 1 机组版滚筒护罩 S3 或润湿装置 S3。","confidence":"reported","sources":["cpf-pm52-2"]},{"id":"rule-cp2000-plain-text","applies_to":["cp2000","prinect-press-center"],"title_zh":"CP2000 及以后为明文报警，报的是“现象”不是“坏件”","body_zh":"CP2000 / Prinect Press Center 的报警是中文或英文明文描述加图标，描述的是系统检测到的现象，而非故障零件的名称。排查次序应为：先查对应的传感器与其接线、位置是否漂移，再查执行器，最后才怀疑板卡。服务/诊断菜单中可查看传感器实时状态、执行器单动测试与错误历史记录；排查间歇性故障时先抄录错误历史，按时间和班次找规律。","confidence":"reported","sources":["cnzhixiang-control-systems","sztcy-cd102"]}],"cases":[{"id":"feeder-miss-sheet","title_zh":"飞达空张、吸不起纸、输纸中断","category":"feeder","symptom_zh":"分纸吸嘴吸不住纸或间歇吸空，机器报空张停机。","field_fixable":"onsite","eta_minutes":[10,30],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"吸嘴橡皮圈老化、开裂、孔径变形","fix_zh":"更换吸嘴橡皮——属高频易损件，应常备。"},{"likelihood":"high","cause_zh":"吸嘴距纸堆过远","fix_zh":"调整压纸脚高度或纸堆自动跟踪高度，使分纸吸嘴距纸堆面保持 3～5 mm。"},{"likelihood":"medium","cause_zh":"气路漏气：分气阀磨损、气管破裂、接头松脱","fix_zh":"听漏、涂皂液查漏，分段夹管定位；分气阀密封面拉伤则研磨或更换。"},{"likelihood":"medium","cause_zh":"气泵真空度不足","fix_zh":"检查干式泵碳精片磨损与进气滤芯堵塞，按小时数更换。"},{"likelihood":"low","cause_zh":"纸张四角翘曲（荷叶边）使吸嘴吸不实","fix_zh":"纸张调湿处理或压平；调整吹风。"},{"likelihood":"low","cause_zh":"输纸检测电眼脏污误报","fix_zh":"清洁电眼，纳入每周保养。"}],"confidence":"reported","sources":["bisenet-feeder-adjust","cnzhixiang-feeder-faults","sina-feeder-cases"],"premium":false},{"id":"feeder-double-sheet","title_zh":"飞达下纸频繁双张","category":"feeder","symptom_zh":"双张检测器频繁动作停机，或双张进入机器。","field_fixable":"onsite","eta_minutes":[10,25],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"松纸吹风过大或压纸脚失效，一次带起多张","fix_zh":"调整松纸吹嘴风量至吹散最上面 3～5 张呈浮起状；检查压纸脚弹簧疲劳与位置。"},{"likelihood":"high","cause_zh":"纸张粘连：裁切刀口粘边、受潮、静电吸附","fix_zh":"上纸前必须扇纸（松纸）撞齐；静电严重时按静电条目处理。"},{"likelihood":"medium","cause_zh":"分纸吸嘴吸力过大或距纸堆过近","fix_zh":"下调吸力、复核 3～5 mm 间距。"},{"likelihood":"medium","cause_zh":"双张检测器间隙与当前纸厚不符","fix_zh":"按当前纸厚重新标定；机械式检测辊间隙用塞尺校验。"}],"confidence":"reported","sources":["bisenet-feeder-adjust","cnzhixiang-feeder-faults"],"premium":false},{"id":"feeder-skew","title_zh":"下纸歪斜、纸张在输纸台上跑偏","category":"feeder","symptom_zh":"纸张到前规时规律性歪斜，两侧不一致。","field_fixable":"onsite","eta_minutes":[30,90],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"飞达整体与主机不平行（安装或撞击后移位）","fix_zh":"校正飞达相对主机的平行度，并调节飞达两侧与走纸杆，使两侧送纸快慢一致——这是歪张的机械性根因。"},{"likelihood":"high","cause_zh":"两侧分纸吸嘴高低不一致、两侧松纸吹风不对称","fix_zh":"逐侧复校吸嘴高度与吹风量。"},{"likelihood":"medium","cause_zh":"输纸带张力不均、压纸轮两侧压力不一致","fix_zh":"重新调整线带张力与压纸轮压力。"},{"likelihood":"low","cause_zh":"纸堆码放不齐","fix_zh":"重新撞齐上纸。"}],"confidence":"reported","sources":["bisenet-common-faults","cnzhixiang-feeder-faults"],"premium":false},{"id":"feeder-relocation-drift","title_zh":"设备搬迁后频繁卡纸（试机时正常）","category":"feeder","symptom_zh":"设备在原厂试机完好，运回后频繁卡纸、输纸不稳。","field_fixable":"onsite","eta_minutes":[120,240],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"飞达走纸组件在运输震动中整体偏移，吸嘴高度、前后间距、吸风平衡全部漂移","fix_zh":"按手册基准对飞达全部参数做一次系统性复校，不要逐个救火式微调。"},{"likelihood":"medium","cause_zh":"新厂区温湿度与原厂差异导致纸张形变","fix_zh":"车间控制在 18～25 ℃、相对湿度 60%～70%，纸张进厂后充分适应环境。"}],"confidence":"reported","sources":["zzyinji-relocation-jams","bisenet-static"],"premium":false},{"id":"paper-static","title_zh":"纸张静电导致分纸困难、撞不齐、收纸不齐","category":"feeder","symptom_zh":"纸张互相吸附，分纸困难、定位不准、收纸散乱。","field_fixable":"onsite","eta_minutes":[20,60],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"车间干燥、纸张含水量低","fix_zh":"纸张入库后充分调湿存放，车间温度 18～25 ℃、相对湿度 60%～70%；必要时车间加湿。"},{"likelihood":"medium","cause_zh":"高速摩擦起电","fix_zh":"适当降低机速。"},{"likelihood":"medium","cause_zh":"缺少静电消除装置","fix_zh":"在输纸板附近加装离子风棒/静电消除器。"},{"likelihood":"low","cause_zh":"纸张本身抗静电性差","fix_zh":"使用抗静电剂。"}],"confidence":"reported","sources":["bisenet-static"],"premium":false},{"id":"register-front-lay-skew","title_zh":"前规处纸张频繁歪斜、左右定位不一致","category":"register","symptom_zh":"纸张到前规后左右定位不一致，套准漂移。","field_fixable":"onsite","eta_minutes":[30,90],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"上游歪张未解决","fix_zh":"先按“下纸歪斜”条目排查飞达，再调前规。"},{"likelihood":"medium","cause_zh":"前规挡纸舌高度与纸厚不匹配","fix_zh":"按纸厚重设通过间隙，具体数值以随机手册为准。"},{"likelihood":"medium","cause_zh":"前规压纸辊脏污或转动发涩","fix_zh":"用海德堡认可的清洁剂清洁；清洁后仍发涩的应更换。"},{"likelihood":"low","cause_zh":"输纸台板脏污","fix_zh":"用微湿抹布配合认可的清洁剂清洁台板。"}],"confidence":"reported","sources":["manualslib-sm102","bisenet-common-faults"],"premium":false},{"id":"register-side-lay","title_zh":"侧规（拉规）定位不准、拉纸量不稳","category":"register","symptom_zh":"轴向套准忽大忽小，侧规拉不到位或拉过头。","field_fixable":"onsite","eta_minutes":[30,90],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"侧规拉纸轮压力不当或磨损","fix_zh":"按纸张重新调整拉纸轮压力，磨损件更换。"},{"likelihood":"high","cause_zh":"侧规定位面纸粉堆积","fix_zh":"清洁定位面，纳入日常保养。"},{"likelihood":"medium","cause_zh":"拉规盖板与台面间隙过大，薄纸窜动","fix_zh":"按纸厚重调盖板间隙。"},{"likelihood":"low","cause_zh":"侧规偏心套位置装错","fix_zh":"拆下侧规重新调整偏心位置——装错时无论怎么调都拉不到位。"}],"confidence":"reported","sources":["bisenet-common-faults","sztcy-cd102"],"notes_zh":"CP2000 可在诊断中临时屏蔽边规到位报警用于诊断，生产前必须恢复，否则会放走大量废张。","premium":false},{"id":"transfer-dead-gripper","title_zh":"叼牙“死牙”导致套印不准、局部重影、叼口剥皮","category":"transfer","symptom_zh":"印品局部套不准并伴随重影，叼口处纸面被撕起。","field_fixable":"parts_needed","eta_minutes":[60,180],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"个别叼牙失去弹性或卡死不动作（死牙），叼纸力不足","fix_zh":"逐个检查牙片开闭灵活性与叼力（用薄纸条逐牙做拉力测试，各牙手感应一致），更换失效的牙片、牙垫与弹簧。"},{"likelihood":"high","cause_zh":"牙垫、牙片磨损导致叼口打滑","fix_zh":"磨损件成对更换后重新校牙。"},{"likelihood":"medium","cause_zh":"牙排之间交接关系失准","fix_zh":"按手册规定的交接量重新校验，勿凭手感乱调。"}],"confidence":"reported","sources":["bisenet-common-faults","cnzhixiang-common-faults","sohu-100-cases"],"premium":false},{"id":"transfer-swing-gripper","title_zh":"摆动牙（递纸摆）交接不良、纸张被弹回或撕坏","category":"transfer","symptom_zh":"交接瞬间纸张回弹、撕裂或起皱。","field_fixable":"onsite","eta_minutes":[45,120],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"摆动牙开牙量过小或开牙时机不对","fix_zh":"点动机器至递纸牙运行到输纸台板交接位置，检查并调整开牙量与交接时机。"},{"likelihood":"medium","cause_zh":"牙片叼力不均","fix_zh":"逐牙检查，参见“死牙”条目。"}],"confidence":"reported","sources":["bisenet-common-faults"],"premium":false},{"id":"transfer-cam-roller","title_zh":"递纸滚筒交接失准造成皱纸、烂纸","category":"transfer","symptom_zh":"交接处规律性起皱、破损。","field_fixable":"parts_needed","eta_minutes":[120,300],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"开牙滚子（凸轮随动轴承）磨损烂损","fix_zh":"更换新件；应急时可按标准尺寸加工或选用国标轴承配作销轴代用。"}],"confidence":"reported","sources":["bisenet-common-faults","cnzhixiang-common-faults"],"premium":true},{"id":"quality-ink-bars","title_zh":"墨杠（与滚筒轴向平行的深色条杠）","category":"quality","symptom_zh":"印品上出现平行于滚筒轴向的规律性条杠。","field_fixable":"onsite","eta_minutes":[30,120],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"靠版墨辊压力过大或滚枕（肩铁）脏污","fix_zh":"按 3～4 mm 压杠标准重调辊压；每天清洁滚枕。"},{"likelihood":"medium","cause_zh":"齿轮间嵌入墨皮、纸毛等污物引起振动（随机性振杠）","fix_zh":"清洗齿轮、检查润滑。"},{"likelihood":"medium","cause_zh":"滚筒齿轮精度差或磨损（等距粗杠，间距=齿距）","fix_zh":"检查齿侧隙，必要时适当减小滚筒中心距或更换齿轮。"},{"likelihood":"low","cause_zh":"滚筒轴承磨损，合压瞬间冲击（叼口附近固定位置条杠）","fix_zh":"更换轴承——需专业维修。"}],"confidence":"reported","sources":["sohu-bars","sina-roller-adjust"],"notes_zh":"先按“杠的规律”判断来源：等距=齿轮，叼口固定=轴承，随机=污物，宽窄不匀=辊压。","premium":false},{"id":"quality-water-bars","title_zh":"水杠（白亮条杠）","category":"quality","symptom_zh":"印品上出现发亮的浅色条杠，多见于叼口附近固定位置。","field_fixable":"onsite","eta_minutes":[30,90],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"靠版水辊与印版压力过重","fix_zh":"重调水辊压力：先调水辊与串水辊（计量辊）间压力，再调水辊与版面压力；上下水辊都要调时先下后上，上辊压力略小于下辊。"},{"likelihood":"medium","cause_zh":"水辊绒套/胶辊表面不均或辊芯弯曲","fix_zh":"检查辊体跳动，必要时更换。"}],"confidence":"reported","sources":["sohu-bars","bisenet-water-unit"],"notes_zh":"压力过轻会走向另一个极端——版面供水不足起脏，两头都要避免。","premium":false},{"id":"quality-ghosting","title_zh":"重影（网点出现双重轮廓）","category":"quality","symptom_zh":"图文边缘或网点出现双重影像。","field_fixable":"onsite","eta_minutes":[20,90],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"橡皮布松动","fix_zh":"按规定扭矩重新绷紧；新橡皮布印刷数百张后要复紧。"},{"likelihood":"medium","cause_zh":"包衬不当（过厚加大挤压滑移）","fix_zh":"按机型规定的衬垫数据重新包衬。"},{"likelihood":"medium","cause_zh":"机组间交接不准、纵向微调机构松动","fix_zh":"检查并调节纸张定位交接部件。"},{"likelihood":"low","cause_zh":"薄纸高速时纸尾拍打橡皮布","fix_zh":"调整导纸风、适当降速。"},{"likelihood":"low","cause_zh":"滚筒轴承磨损","fix_zh":"需专业维修。"}],"confidence":"reported","sources":["cnzhixiang-scuffing","bisenet-common-faults"],"notes_zh":"局部重影且伴随套印不准的，优先回查“死牙”。","premium":false},{"id":"quality-plate-wear","title_zh":"花版、掉版、印版耐印力低","category":"quality","symptom_zh":"图文部分掉墨、空白部位起脏，印版远未达到应有印量即报废。","field_fixable":"onsite","eta_minutes":[30,120],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"版滚筒与橡皮滚筒压力过大，版面砂目磨平","fix_zh":"按理想压力和正确包衬数据控制滚压——机械磨损是耐印力下降的主要根源。"},{"likelihood":"high","cause_zh":"润版液 pH 过低（过酸）或过高","fix_zh":"PS 版润版液 pH 控制在 5.0～6.5 为宜，按药水供应商标准执行。"},{"likelihood":"medium","cause_zh":"纸粉、砂粒多的纸张磨版","fix_zh":"勤洗橡皮布，必要时换纸。"},{"likelihood":"medium","cause_zh":"油墨粘度过高或用墨量过少","fix_zh":"调整墨性与墨量。"},{"likelihood":"low","cause_zh":"滚筒轴套磨损使窜动量加大，水辊墨辊对版冲击增大","fix_zh":"检修滚筒轴承——需专业维修。"}],"confidence":"reported","sources":["bisenet-plate-life","bisenet-ph-control"],"premium":true},{"id":"dampening-chiller","title_zh":"润版液水箱不制冷、水温偏高、酒精挥发过快","category":"dampening","symptom_zh":"循环水温高于设定值，酒精消耗异常快，版面水墨难平衡。","field_fixable":"onsite","eta_minutes":[30,120],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"压缩机散热器（冷凝器）表面积尘堆积","fix_zh":"清理散热器表面——这是最常见原因。"},{"likelihood":"high","cause_zh":"冷却过滤器/管路堵塞","fix_zh":"拆洗过滤器。"},{"likelihood":"medium","cause_zh":"显示屏温度设定值被误改","fix_zh":"核对设定值，正常范围 8～15 ℃（常用 10～12 ℃）。"},{"likelihood":"medium","cause_zh":"制冷压缩机过电流保护开关跳开或高低压保护动作","fix_zh":"检查保护开关状态并查明跳闸原因后复位。"},{"likelihood":"medium","cause_zh":"循环水泵不运转或流量不足","fix_zh":"检查水泵——泵不转会同时引发版面供水不足报警。"},{"likelihood":"low","cause_zh":"制冷剂泄漏或压缩机本体故障","fix_zh":"交制冷专业维修处理。"}],"confidence":"reported","sources":["ys2345-water-tank","bisenet-fountain-solution"],"premium":true},{"id":"inking-roller-glazing","title_zh":"墨辊晶化（釉化）、传墨不良","category":"inking","symptom_zh":"辊面光滑发亮，亲墨性下降，传墨不良，水墨平衡难控。","field_fixable":"onsite","eta_minutes":[60,180],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"油墨/润版液残留物（钙盐、纸粉、药水添加剂）在压力与热量下结晶积釉","fix_zh":"用专用除钙除釉清洗膏深度清洗——普通洗车水洗不掉钙化层；轻度晶化可用浮石粉配合清洗剂手工打磨。"},{"likelihood":"medium","cause_zh":"长期使用劣质煤油/汽油/酒精清洗，加速老化釉化","fix_zh":"改用合格清洗剂，洗车程序走完全程让刮墨板刮净。"},{"likelihood":"medium","cause_zh":"辊间压力过大，挤压发热","fix_zh":"按标准重调辊压——压力过大会使胶辊膨胀脱壳直至报废。"},{"likelihood":"low","cause_zh":"辊面出现细小裂纹","fix_zh":"及时研磨或更换。"}],"confidence":"reported","sources":["bisenet-roller-care","cnzhixiang-common-faults"],"premium":true},{"id":"delivery-uneven-stack","title_zh":"收纸不齐","category":"delivery","symptom_zh":"收纸台纸张散乱，边缘参差。","field_fixable":"parts_needed","eta_minutes":[30,120],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"收纸减速吸鼓电机不转","fix_zh":"修复或更换减速电机。"},{"likelihood":"high","cause_zh":"传动软轴断裂","fix_zh":"更换软轴。"},{"likelihood":"high","cause_zh":"减速吸鼓胶圈（O 型密封圈）断裂或老化","fix_zh":"更换；应急时可用尺寸相符的国产 O 型密封圈替代。"},{"likelihood":"medium","cause_zh":"齐纸器行程与时机设定不当","fix_zh":"按纸张幅面重设前齐纸板与侧齐纸器。"},{"likelihood":"medium","cause_zh":"收纸吹风/真空减速风量与纸张不匹配","fix_zh":"薄纸减风、厚纸加风。"},{"likelihood":"low","cause_zh":"纸张静电","fix_zh":"见静电条目。"}],"confidence":"reported","sources":["cnzhixiang-common-faults","sohu-100-cases"],"premium":true},{"id":"delivery-powder-blockage","title_zh":"喷粉装置不工作 / 喷粉不均导致背面蹭脏","category":"delivery","symptom_zh":"喷粉量不足或局部无粉，印品背面蹭脏。","field_fixable":"onsite","eta_minutes":[20,60],"machines":["*"],"causes":[{"likelihood":"high","cause_zh":"喷粉嘴/喷粉管受潮结块堵塞","fix_zh":"逐个疏通喷嘴与管路；粉仓防潮，每月彻底疏通一次。"},{"likelihood":"high","cause_zh":"粉筒滤网堵塞","fix_zh":"清理滤网——属经常性维护项。"},{"likelihood":"medium","cause_zh":"喷粉气泵压力不足","fix_zh":"检修气泵与气源压力。"},{"likelihood":"medium","cause_zh":"密封片垫损坏","fix_zh":"更换片垫。"},{"likelihood":"low","cause_zh":"输粉胶管老化","fix_zh":"更换胶管。"}],"confidence":"reported","sources":["cnzhixiang-common-faults","sohu-100-cases","cnzhixiang-scuffing"],"notes_zh":"喷粉量过大会造成粉化（表面粗糙、影响覆膜上光），需找平衡点；同时配合降低收纸堆高度、勤下纸。","premium":true}],"maintenance":[{"id":"m-bearer-rings","title_zh":"清洁印版滚筒、橡皮滚筒滚枕（肩铁）","interval":"daily","category":"unit","detail_zh":"滚枕脏污会直接引起墨杠，属每日必做项。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","sohu-maintenance"]},{"id":"m-impression-cylinder","title_zh":"清洁压印滚筒表面","interval":"per_shift","category":"unit","detail_zh":"每班清洁一次；换活与交班时连同橡皮布一起清洗。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-water-roller-pressure","title_zh":"检查水辊靠版压力","interval":"daily","category":"dampening","detail_zh":"压力过重会磨版并出水杠，过轻则版面供水不足起脏。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","bisenet-water-unit"]},{"id":"m-fountain-params","title_zh":"检查润版液参数（pH / 导电率 / 温度 / 酒精）","interval":"daily","category":"dampening","spec_zh":"pH 4.8～5.5（版材寿命角度可放宽至 5.0～6.5）；导电率 800～1500 μS/cm，以原水导电率为基线记录增量；温度 8～15 ℃，常用 10～12 ℃；IPA 浓度常用 8%～12%，按机型与药水说明执行。","detail_zh":"加酒精会使导电率下降、pH 略升，酒精浓度须用折光仪或酒精比重计单独计量，不能靠导电率推算。","machines":["*"],"confidence":"reported","sources":["bisenet-fountain-solution","bisenet-ph-control"]},{"id":"m-central-lube-check","title_zh":"开机确认中央润滑油标与气压表读数","interval":"daily","category":"lubrication","detail_zh":"油标无油或观察不清时应紧急停车，检查是否漏油、油泵是否工作。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-wash-up","title_zh":"洗车（洗橡皮布程序）","interval":"daily","category":"unit","detail_zh":"每天至少一次，换活必洗；印易掉毛掉粉的纸张时应增加频次。洗车程序要走完全程，让刮墨板刮净，避免残留物加速胶辊釉化。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","bisenet-roller-care","bisenet-maintenance"]},{"id":"m-feeder-suckers","title_zh":"清洁飞达分纸/送纸吸嘴及旋转分气阀","interval":"weekly","category":"feeder","detail_zh":"吸嘴口积粉与分气阀磨损是输纸时好时坏的常见根因。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-feeder-sensors","title_zh":"彻底清洁输纸控制电眼与递纸摆区域","interval":"weekly","category":"feeder","detail_zh":"电眼脏污会造成空张、双张、纸张未清空等一系列误报警。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","sztcy-cd102"]},{"id":"m-delivery-chain","title_zh":"清洁收纸链条与牙排并加油","interval":"weekly","category":"delivery","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-lube-yellow","title_zh":"黄色油嘴打黄油","interval":"weekly","category":"lubrication","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","sohu-maintenance"]},{"id":"m-feed-belts","title_zh":"清洗输纸线带表面","interval":"weekly","category":"feeder","detail_zh":"线带脏污会把未干墨迹蹭到下一张的正面。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-scuffing"]},{"id":"m-fountain-measure","title_zh":"用仪器实测润版液 pH 与导电率，清洗润版箱过滤海绵","interval":"weekly","category":"dampening","machines":["*"],"confidence":"reported","sources":["bisenet-fountain-solution"]},{"id":"m-gripper-pads","title_zh":"彻底清洁所有滚筒咬牙牙垫并逐牙检查叼力","interval":"monthly","category":"transfer","detail_zh":"用薄纸条逐牙做拉力测试，各牙手感应一致；发现死牙立即处理。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","bisenet-common-faults"]},{"id":"m-powder-lines","title_zh":"彻底疏通喷粉管路与喷嘴","interval":"monthly","category":"delivery","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-lube-blue","title_zh":"蓝色油嘴打黄油","interval":"monthly","category":"lubrication","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-fountain-tank-clean","title_zh":"清理润版液循环箱","interval":"monthly","category":"dampening","detail_zh":"建议每半月一次。油墨与纸粉污染会让导电率读数失真。","machines":["*"],"confidence":"reported","sources":["bisenet-fountain-solution"]},{"id":"m-vacuum-pump","title_zh":"检查气泵滤芯与碳精片（旋片）磨损","interval":"monthly","category":"pneumatic","detail_zh":"干式旋片泵的碳精片磨损是真空度/压力下降的头号原因，应按运行小时数定期更换；同时清理进气滤芯与消音器。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-common-faults"]},{"id":"m-lube-green","title_zh":"绿色油嘴打黄油","interval":"quarterly","category":"lubrication","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance","sohu-maintenance"]},{"id":"m-central-lube-oil","title_zh":"更换中央润滑系统机油与滤芯","interval":"annual","category":"lubrication","detail_zh":"常见做法为一年一换，滤芯同换。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-maintenance"]},{"id":"m-bearing-clearance","title_zh":"检测滚筒轴承游隙与齿轮侧隙","interval":"annual","category":"unit","detail_zh":"轴承与齿轮磨损是墨杠、重影、套准漂移、耐印力下降的共同上游原因，年度检修时统一测量记录趋势。","machines":["*"],"confidence":"reported","sources":["hdb-xl106-maint-l2","bisenet-plate-life"]},{"id":"m-safety-test","title_zh":"安全装置功能测试","interval":"annual","category":"safety","detail_zh":"逐个测试急停、护罩开关、光电人体检测的动作可靠性并留存记录。","machines":["*"],"confidence":"reported","sources":["hdb-xl106-maint-l2"]},{"id":"m-cabinet-clean","title_zh":"电气柜除尘与端子紧固","interval":"annual","category":"electrical","detail_zh":"断电后进行。松动的端子是间歇性电气故障的常见来源。","machines":["*"],"confidence":"reported","sources":["czkywx-cp2000-ipc"]},{"id":"m-blanket-rotation","title_zh":"橡皮布定期轮换与复紧","interval":"monthly","category":"unit","detail_zh":"长期印同一幅面会在边界处产生塑性变形；新橡皮布印刷数百张后必须复紧一次。及时清洗堆积的纸毛纸粉，堆积物会局部增压加速塑变。","machines":["*"],"confidence":"reported","sources":["cnzhixiang-scuffing","bisenet-common-faults"]},{"id":"m-cpt-battery","title_zh":"更换 CP-tronic 主机板后备电池","interval":"annual","category":"electrical","detail_zh":"CP-tronic 老机型主机板依赖后备电池保存参数，出现电池低电报警要及时更换，否则断电后机器参数与预置数据丢失。","machines":["sm-102","cd-102","sm-74","mo","pm-52","qm-46","m-600"],"control_systems":["cp-tronic"],"confidence":"reported","sources":["czkywx-cp2000-ipc","tpzd-boards"]}],"wearParts":[{"id":"wp-sucker-rubber","name_zh":"吸嘴橡皮圈（分纸/送纸）","category":"feeder","symptom_when_worn_zh":"老化、开裂、孔径变形 → 空张、吸不牢","stock_advice_zh":"高频易损件，必须常备。","sources":["bisenet-feeder-adjust","sina-feeder-cases"]},{"id":"wp-pump-vanes","name_zh":"气泵碳精片（旋片）与进气滤芯","category":"pneumatic","symptom_when_worn_zh":"真空度/压力下降 → 输纸不稳、吸不起纸","stock_advice_zh":"按运行小时数预防性更换，不要等到吸力不足才换。","sources":["cnzhixiang-common-faults"]},{"id":"wp-gripper-pads","name_zh":"牙片、牙垫与叼牙弹簧","category":"transfer","symptom_when_worn_zh":"叼口打滑、死牙 → 套印不准、局部重影、叼口剥皮","stock_advice_zh":"磨损件成对更换，换后需重新校牙。","sources":["bisenet-common-faults"]},{"id":"wp-cam-roller","name_zh":"开牙滚子（凸轮随动轴承）","category":"transfer","symptom_when_worn_zh":"递纸滚筒交接失准 → 皱纸、烂纸","stock_advice_zh":"应急时可按标准尺寸加工或选用国标轴承配作销轴代用。","sources":["bisenet-common-faults"]},{"id":"wp-delivery-o-ring","name_zh":"减速吸鼓胶圈（O 型密封圈）","category":"delivery","symptom_when_worn_zh":"断裂老化 → 收纸不齐","stock_advice_zh":"应急时可用尺寸相符的国产 O 型密封圈替代。","sources":["cnzhixiang-common-faults","sohu-100-cases"]},{"id":"wp-blanket","name_zh":"橡皮布","category":"unit","symptom_when_worn_zh":"失去弹性 → 墨色虚淡、网点不清、文字变形；被压伤低凹 → 局部印不上","stock_advice_zh":"换下的可翻转用于要求低的活件；按扭矩扳手规定值绷紧。","sources":["cnzhixiang-scuffing"]},{"id":"wp-ink-rollers","name_zh":"墨辊 / 水辊胶辊","category":"inking","symptom_when_worn_zh":"晶化釉化 → 传墨不良；细小裂纹 → 藏污出脏点；脱壳 → 报废","stock_advice_zh":"定期用除钙除釉清洗膏深度清洗可显著延寿；避免日光直射与劣质清洗剂。","sources":["bisenet-roller-care"]},{"id":"wp-ltk-board","name_zh":"LTK500 水辊控制板等常见板卡","category":"electrical","symptom_when_worn_zh":"水辊电机不转或不跟机速","stock_advice_zh":"国内第三方维修市场对该板及 KLM4 驱动板、IDEB 墨驱板、CP2000 触摸屏有元件级维修能力，可备一块周转件。","sources":["tpzd-boards","czkywx-cp2000-ipc"]}],"lubeColors":{"title_zh":"油嘴颜色对应润滑周期","body_zh":"海德堡整机油嘴按颜色区分加注周期：黄色每周、蓝色每月、绿色每三个月打黄油。以本机随机润滑图表为准。","items":[{"color":"yellow","color_zh":"黄色","interval":"weekly"},{"color":"blue","color_zh":"蓝色","interval":"monthly"},{"color":"green","color_zh":"绿色","interval":"quarterly"}],"confidence":"reported","sources":["cnzhixiang-maintenance","sohu-maintenance"]},"paperPath":["feeder","register","transfer","unit","dampening","inking","delivery"],"systemGroup":["pneumatic","drive","electrical","safety","control","lubrication","quality"],"updated":"2026-08-24"};
+
+const state = {
+  tab: "codes",
+  machine: "all",
+  cat: { codes: "all", cases: "all" },
+  q: { codes: "", cases: "" },
+  open: {},
+  diag: { cat: null, caseId: null },
+  interval: "daily",
+  unlocked: false,
+  checked: {}
+};
+
+const STORE = "hdb-kb-v1";
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE) || "{}");
+  if (saved && typeof saved === "object") {
+    state.checked = saved.checked || {};
+    if (saved.machine) state.machine = saved.machine;
+  }
+} catch (e) { /* 隐私模式或站点数据被禁用时静默降级 */ }
+
+function persist() {
+  try {
+    localStorage.setItem(STORE, JSON.stringify({ checked: state.checked, machine: state.machine }));
+  } catch (e) { /* 忽略：本地记忆只是便利功能，不影响使用 */ }
+}
+
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const machineById = id => D.machines.find(m => m.id === id);
+
+/* ── 机型过滤：本原型与常见 AI 生成版本最本质的区别 ──
+   机型是第一层入口，且条目声明的控制系统必须与该机型实际配备的世代相符。 */
+function matches(entry) {
+  if (state.machine === "all") return true;
+  const m = machineById(state.machine);
+  if (!m) return true;
+  const list = entry.machines || ["*"];
+  if (!list.includes("*") && !list.includes(state.machine)) return false;
+  if (entry.control_systems && entry.control_systems.length) {
+    return entry.control_systems.some(cs => m.control_systems.includes(cs));
+  }
+  return true;
+}
+
+function confBadge(c) {
+  const lv = D.confidenceLevels[c];
+  if (!lv) return "";
+  return `<span class="conf ${esc(c)}" title="${esc(lv.desc_zh)}">${
+    c === "verified" ? "✓ " : ""}${esc(lv.name_zh)}</span>`;
+}
+
+function srcBlock(ids) {
+  if (!ids || !ids.length) return "";
+  const links = ids.map(id => {
+    const s = D.sources[id];
+    if (!s) return "";
+    return `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`;
+  }).join("");
+  return `<div class="srcs"><div class="lbl lat">Sources · 出处</div><div class="srclist">${links}</div></div>`;
+}
+
+function extras(e) {
+  let h = "";
+  if (e.spec_zh) h += `<div class="note"><b>参数：</b>${esc(e.spec_zh)}</div>`;
+  if (e.safety_zh) h += `<div class="safety"><b class="lat">SAFETY · 安全</b>${esc(e.safety_zh)}</div>`;
+  if (e.notes_zh) h += `<div class="note">${esc(e.notes_zh)}</div>`;
+  return h;
+}
+
+/* ── 纸路筛选条 ── */
+function pathBar(scope, items) {
+  const counts = {};
+  items.forEach(e => { counts[e.category] = (counts[e.category] || 0) + 1; });
+  const cur = state.cat[scope];
+  const chip = (id, name) => {
+    const n = id === "all" ? items.length : (counts[id] || 0);
+    if (id !== "all" && !n) return "";
+    return `<button class="chip" aria-pressed="${cur === id}" data-cat="${esc(id)}" data-scope="${esc(scope)}"
+      >${esc(name)}<span class="n">${n}</span></button>`;
+  };
+  const path = D.paperPath.map(id => chip(id, D.categories[id])).join("");
+  const sys = D.systemGroup.map(id => chip(id, D.categories[id])).join("");
+  return `<div class="path"><div class="path-inner">${chip("all", "全部")}${path}${
+    sys ? '<span class="path-div"></span>' + sys : ""}</div></div>`;
+}
+
+function hiddenNotice(hidden, total) {
+  const el = document.getElementById("notice");
+  if (state.machine === "all" || !hidden) { el.hidden = true; return; }
+  const m = machineById(state.machine);
+  const cs = m.control_systems.map(c => D.controlSystems[c].name_zh).join(" / ");
+  el.hidden = false;
+  el.innerHTML = `<span>已按 <b>${esc(m.name)}（${esc(cs)}）</b>过滤，隐藏 <b>${hidden}</b> 条不适用于本机型的内容，
+    当前显示 ${total - hidden} 条。<br>其他世代控制系统的报警不会出现在这台机器上——把它们混列是同类产品最常见的硬伤。</span>`;
+}
+
+/* ── 查码 ── */
+function viewCodes() {
+  const all = D.faultCodes;
+  const byMachine = all.filter(matches);
+  hiddenNotice(all.length - byMachine.length, all.length);
+
+  const q = state.q.codes.trim().toLowerCase();
+  const list = byMachine.filter(e =>
+    (state.cat.codes === "all" || e.category === state.cat.codes) &&
+    (!q || (e.code + e.title_zh + e.meaning_zh + (e.example || "")).toLowerCase().includes(q)));
+
+  const cards = list.map(e => {
+    const open = !!state.open["c" + e.id];
+    return `<article class="card ${esc(e.severity)}">
+      <button class="card-hd" data-open="c${esc(e.id)}" aria-expanded="${open}">
+        <div class="row1"><span class="code mono">${esc(e.code)}</span>
+          <span class="pill ${esc(e.severity)} lat">${
+            { stop: "停机", warning: "警告", info: "提示" }[e.severity]}</span></div>
+        <div class="ttl">${esc(e.title_zh)}</div>
+        <div class="meta"><span class="tag">${esc(D.categories[e.category])}</span>${
+          e.control_systems.map(c => `<span class="tag">${esc(D.controlSystems[c].name_zh)}</span>`).join("")
+        }${confBadge(e.confidence)}</div>
+      </button>
+      ${open ? `<div class="body">
+        ${e.example ? `<p class="mono" style="font-size:13px;color:var(--ink-3)">例：${esc(e.example)}</p>` : ""}
+        <p>${esc(e.meaning_zh)}</p>
+        <div class="lbl lat">Check order · 排查顺序</div>
+        <ol class="steps">${e.checks.map(c => `<li>${esc(c)}</li>`).join("")}</ol>
+        ${extras(e)}${srcBlock(e.sources)}</div>` : ""}
+    </article>`;
+  }).join("");
+
+  return `${pathBar("codes", byMachine)}
+    <input class="search" id="q-codes" placeholder="搜代码、现象、部位…" value="${esc(state.q.codes)}">
+    <div class="count">${list.length} 条故障码${q ? "（匹配“" + esc(q) + "”）" : ""}</div>
+    ${cards || '<div class="empty">没有匹配的代码。<br>换个关键词，或到「诊断」按现象排查。</div>'}
+    <h3 class="sec">读码规则</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin:0 0 10px">
+      会读规则的人能自己解未收录的码——这比背代码表有用。</p>
+    ${D.decodingRules.map(r => `<article class="card info">
+      <div class="card-hd"><div class="ttl">${esc(r.title_zh)}</div>
+      <div class="meta">${r.applies_to.map(c =>
+        `<span class="tag">${esc(D.controlSystems[c].name_zh)}</span>`).join("")}${confBadge(r.confidence)}</div>
+      <p style="margin:10px 0 0;font-size:14px">${esc(r.body_zh)}</p>${srcBlock(r.sources)}</div>
+    </article>`).join("")}`;
+}
+
+/* ── 案例 ── */
+function caseCard(e) {
+  const open = !!state.open["k" + e.id];
+  const fx = D.fixableLevels[e.field_fixable];
+  const tone = { onsite: "ok", parts_needed: "warn", service_required: "stop" }[e.field_fixable];
+  const locked = e.premium && !state.unlocked;
+  return `<article class="card info">
+    <button class="card-hd" data-open="k${esc(e.id)}" aria-expanded="${open}">
+      <div class="ttl">${esc(e.title_zh)}</div>
+      <div class="meta"><span class="tag">${esc(D.categories[e.category])}</span>
+        <span class="tag ${tone}">${esc(fx.name_zh)}</span>
+        <span class="eta mono">${e.eta_minutes[0]}–${e.eta_minutes[1]} 分钟</span>
+        ${confBadge(e.confidence)}${locked ? '<span class="tag">🔒 会员</span>' : ""}</div>
+      <div style="font-size:13.5px;color:var(--ink-2);margin-top:5px">${esc(e.symptom_zh)}</div>
+    </button>
+    ${!open ? "" : locked ? `<div class="lock">
+        <div class="t">完整排查路径为会员内容</div>
+        <div class="d">含 ${e.causes.length} 条按概率排序的原因与对应做法</div>
+        <button data-unlock="1">解锁全部案例</button>
+        <div class="ph lat">付费墙占位 · 真实产品由后端鉴权</div></div>`
+      : `<div class="body">
+        <div class="lbl lat">Causes by likelihood · 按概率排序</div>
+        ${e.causes.map(c => {
+          const n = { high: 3, medium: 2, low: 1 }[c.likelihood];
+          const zh = { high: "高", medium: "中", low: "低" }[c.likelihood];
+          return `<div class="cause"><div class="lk">
+            <div class="lkbar">${[1, 2, 3].map(i =>
+              `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>
+            <div class="lktxt">${zh}</div></div>
+            <div class="cause-b"><div class="c">${esc(c.cause_zh)}</div>
+            <div class="f">→ ${esc(c.fix_zh)}</div></div></div>`;
+        }).join("")}
+        ${extras(e)}${srcBlock(e.sources)}</div>`}
+  </article>`;
+}
+
+function viewCases() {
+  const all = D.cases;
+  const byMachine = all.filter(matches);
+  hiddenNotice(all.length - byMachine.length, all.length);
+  const q = state.q.cases.trim().toLowerCase();
+  const list = byMachine.filter(e =>
+    (state.cat.cases === "all" || e.category === state.cat.cases) &&
+    (!q || (e.title_zh + e.symptom_zh + e.causes.map(c => c.cause_zh).join("")).toLowerCase().includes(q)));
+
+  return `${pathBar("cases", byMachine)}
+    <input class="search" id="q-cases" placeholder="搜现象，如 双张、歪斜、蹭脏…" value="${esc(state.q.cases)}">
+    <div class="count">${list.length} 个案例 · 按纸路工位分类</div>
+    ${list.map(caseCard).join("") || '<div class="empty">没有匹配的案例。</div>'}`;
+}
+
+/* ── 引导诊断 ── */
+function viewDiag() {
+  const pool = D.cases.filter(matches);
+  hiddenNotice(D.cases.length - pool.length, D.cases.length);
+
+  if (!state.diag.cat) {
+    const cats = [...D.paperPath, ...D.systemGroup].filter(c => pool.some(e => e.category === c));
+    return `<div class="step lat">STEP 1 / 2</div>
+      <h2 class="q">现在最明显的是哪一类？</h2>
+      <p class="qd">按现象走，比对着代码猜更快。有现成代码就直接去「查码」。</p>
+      ${cats.map(c => {
+        const n = pool.filter(e => e.category === c).length;
+        return `<button class="opt" data-diag-cat="${esc(c)}">${esc(D.categories[c])}
+          <span class="sm">${n} 个案例</span></button>`;
+      }).join("")}`;
+  }
+
+  if (!state.diag.caseId) {
+    const list = pool.filter(e => e.category === state.diag.cat);
+    return `<button class="back" data-diag-back="cat">← 重选类别</button>
+      <div class="step lat">STEP 2 / 2</div>
+      <h2 class="q">${esc(D.categories[state.diag.cat])}：具体是哪种表现？</h2>
+      <p class="qd">选最接近的一条。</p>
+      ${list.map(e => `<button class="opt" data-diag-case="${esc(e.id)}">${esc(e.title_zh)}
+        <span class="sm">${esc(e.symptom_zh)}</span></button>`).join("")}`;
+  }
+
+  const c = D.cases.find(e => e.id === state.diag.caseId);
+  state.open["k" + c.id] = true;
+  const codes = D.faultCodes.filter(f => f.category === c.category && matches(f));
+  return `<button class="back" data-diag-back="case">← 重选表现</button>
+    <div class="step lat">RESULT · 排查建议</div>
+    ${caseCard(c)}
+    ${codes.length ? `<h3 class="sec">同工位相关故障码</h3>${
+      codes.map(f => `<article class="card ${esc(f.severity)}"><div class="card-hd">
+        <div class="row1"><span class="code mono">${esc(f.code)}</span></div>
+        <div class="ttl">${esc(f.title_zh)}</div>
+        <div class="meta">${confBadge(f.confidence)}</div></div></article>`).join("")}` : ""}`;
+}
+
+/* ── 保养 ── */
+function viewMaint() {
+  const all = D.maintenance;
+  const pool = all.filter(matches);
+  hiddenNotice(all.length - pool.length, all.length);
+  const list = pool.filter(e => e.interval === state.interval);
+  const done = list.filter(e => state.checked[e.id]).length;
+
+  const tabs = D.intervals.filter(iv => pool.some(e => e.interval === iv.id)).map(iv => {
+    const n = pool.filter(e => e.interval === iv.id).length;
+    return `<button class="chip" aria-pressed="${state.interval === iv.id}" data-iv="${esc(iv.id)}"
+      >${esc(iv.name_zh)}<span class="n">${n}</span></button>`;
+  }).join("");
+
+  return `<div class="path"><div class="path-inner">${tabs}
+    <span class="path-div"></span>
+    <button class="chip" aria-pressed="${state.interval === "parts"}" data-iv="parts">易损件<span class="n">${D.wearParts.length}</span></button>
+    </div></div>
+    ${state.interval === "parts" ? `
+      <div class="count">${D.wearParts.length} 类易损件 · 每项标明磨损后表现为哪个故障</div>
+      ${D.wearParts.map(p => `<article class="card info"><div class="card-hd">
+        <div class="ttl">${esc(p.name_zh)}</div>
+        <div class="meta"><span class="tag">${esc(D.categories[p.category])}</span></div>
+        <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px">
+          <b>磨损后：</b>${esc(p.symptom_when_worn_zh)}</div>
+        <div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">
+          <b>备件建议：</b>${esc(p.stock_advice_zh)}</div>
+        ${srcBlock(p.sources)}</div></article>`).join("")}`
+    : `<div class="progress">今日点检 ${done} / ${list.length}　·　勾选状态存在本机浏览器</div>
+      ${list.map(e => `<label class="chk ${state.checked[e.id] ? "done" : ""}">
+        <input type="checkbox" data-chk="${esc(e.id)}" ${state.checked[e.id] ? "checked" : ""}>
+        <span><span class="t">${esc(e.title_zh)}</span>
+        ${e.detail_zh ? `<span class="d">${esc(e.detail_zh)}</span>` : ""}
+        ${e.spec_zh ? `<span class="spec">${esc(e.spec_zh)}</span>` : ""}
+        ${srcBlock(e.sources)}</span></label>`).join("")}
+      ${state.interval === "weekly" || state.interval === "monthly" || state.interval === "quarterly" ? `
+        <div class="note"><b>${esc(D.lubeColors.title_zh)}：</b>${esc(D.lubeColors.body_zh)}
+        <div class="lube">${D.lubeColors.items.map(i =>
+          `<span><i class="dot" style="background:${
+            { yellow: "#E8B923", blue: "#2F72B8", green: "#2E8B4F" }[i.color]}"></i>${
+            esc(i.color_zh)}　${esc(D.intervals.find(v => v.id === i.interval).name_zh)}</span>`).join("")}</div></div>` : ""}`}`;
+}
+
+/* ── 关于 ── */
+function viewAbout() {
+  document.getElementById("notice").hidden = true;
+  const byType = {};
+  Object.values(D.sources).forEach(s => { (byType[s.type] = byType[s.type] || []).push(s); });
+  const order = ["official", "manual", "forum", "document", "article", "vendor"];
+  const label = { official: "官方", manual: "手册", forum: "论坛", document: "文档", article: "文章", vendor: "维修商" };
+
+  return `<h3 class="sec" style="border:0;padding-top:14px;margin-top:8px">这是什么</h3>
+    <p style="font-size:14.5px">这是一份海德堡单张纸胶印机排故知识库的<b>可交互原型</b>，界面由结构化数据自动生成。
+    它想证明的只有一件事：<b>这类内容的价值不在条目数量，而在每一条都能追溯。</b></p>
+    <div class="stats">
+      <div class="stat"><div class="v">${D.faultCodes.length}</div><div class="k">故障码</div></div>
+      <div class="stat"><div class="v">${D.decodingRules.length}</div><div class="k">读码规则</div></div>
+      <div class="stat"><div class="v">${D.cases.length}</div><div class="k">案例</div></div>
+      <div class="stat"><div class="v">${D.maintenance.length}</div><div class="k">保养项</div></div>
+      <div class="stat"><div class="v">${Object.keys(D.sources).length}</div><div class="k">来源</div></div>
+      <div class="stat"><div class="v">${D.machines.length}</div><div class="k">机型</div></div>
+    </div>
+
+    <h3 class="sec">三条收录纪律</h3>
+    <div class="rule"><h4>一、没有来源的条目不准进库</h4>
+      <p>每条数据都必须引用已登记的公开来源，校验器会检查引用是否可解析。宁可只有 ${D.faultCodes.length} 条真的故障码，也不要 200 条“看起来很像”的。</p></div>
+    <div class="rule"><h4>二、故障码表禁止收录未核实条目</h4>
+      <p>置信度分三档：<b>已核实</b>（多来源交叉印证）、<b>案例报告</b>（单一公开案例，方向可信但需现场确认）、<b>待核</b>（无法定位一手出处，禁止进入付费内容）。每条的徽标就是它的档位。</p></div>
+    <div class="rule"><h4>三、控制系统必须与机型世代匹配</h4>
+      <p>把 CP2000 时代的报警挂到用 Prinect Press Center 的 XL 106 上，校验器会直接报错中断构建。顶部选机型试试——不适用的内容会被过滤掉并告诉你隐藏了几条。</p></div>
+
+    <h3 class="sec">机型与控制系统</h3>
+    ${D.machines.map(m => `<div class="srcrow"><span class="ty">${esc(m.format_zh)}</span>
+      <span><b>${esc(m.name)}</b> · ${m.control_systems.map(c => esc(D.controlSystems[c].name_zh)).join(" / ")}
+      ${m.note_zh ? `<br><span style="color:var(--ink-3);font-size:12.5px">${esc(m.note_zh)}</span>` : ""}</span></div>`).join("")}
+
+    <h3 class="sec">全部来源（${Object.keys(D.sources).length}）</h3>
+    ${order.filter(t => byType[t]).map(t => byType[t].map(s =>
+      `<div class="srcrow"><span class="ty lat">${esc(label[t])}</span>
+      <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></div>`).join("")).join("")}
+
+    <div class="foot">
+      <b>免责声明：</b>本数据由公开网络资料汇编整理，仅供技术参考，不构成对任何具体设备的维修指导。
+      所有参数（压力、间隙、温度、油品、扭矩）一律以本机随机《操作手册》《维修手册》为准；
+      涉及安全回路、主传动、电气柜内部的作业应由受训人员执行。<b>严禁短接、屏蔽任何安全开关和护罩检测。</b><br><br>
+      商标 Heidelberg、Speedmaster、Prinect、CP2000 等归海德堡印刷机械股份公司所有，本原型与该公司无隶属或授权关系。
+      页面中的“解锁”为付费墙呈现方式的占位演示，不产生任何交易。数据更新于 ${esc(D.updated)}。
+    </div>`;
+}
+
+/* ── 渲染与事件 ── */
+const TABS = [
+  ["codes", "查码", viewCodes], ["diag", "诊断", viewDiag], ["cases", "案例", viewCases],
+  ["maint", "保养", viewMaint], ["about", "关于", viewAbout]
+];
+
+function render() {
+  document.getElementById("tabs").innerHTML = TABS.map(([id, name]) =>
+    `<button role="tab" aria-selected="${state.tab === id}" data-tab="${id}">${name}</button>`).join("");
+
+  const m = machineById(state.machine);
+  document.getElementById("csys").textContent = m
+    ? m.control_systems.map(c => D.controlSystems[c].name_zh).join(" / ") : "全部机型";
+
+  document.getElementById("view").innerHTML = (TABS.find(t => t[0] === state.tab)[2])();
+}
+
+function init() {
+  const sel = document.getElementById("machine");
+  sel.innerHTML = `<option value="all">全部机型</option>` +
+    D.machines.map(m => `<option value="${m.id}">${m.name}</option>`).join("");
+  sel.value = state.machine;
+  sel.addEventListener("change", e => {
+    state.machine = e.target.value;
+    state.diag = { cat: null, caseId: null };
+    persist(); render();
+  });
+
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-tab],[data-cat],[data-open],[data-iv],[data-diag-cat],[data-diag-case],[data-diag-back],[data-unlock]");
+    if (!t) return;
+    const d = t.dataset;
+    if (d.tab) state.tab = d.tab;
+    else if (d.cat) state.cat[d.scope] = d.cat;
+    else if (d.open) state.open[d.open] = !state.open[d.open];
+    else if (d.iv) state.interval = d.iv;
+    else if (d.diagCat) state.diag.cat = d.diagCat;
+    else if (d.diagCase) state.diag.caseId = d.diagCase;
+    else if (d.diagBack) state.diag = d.diagBack === "cat" ? { cat: null, caseId: null } : { ...state.diag, caseId: null };
+    else if (d.unlock) state.unlocked = true;
+    render();
+  });
+
+  document.addEventListener("change", e => {
+    const id = e.target.dataset && e.target.dataset.chk;
+    if (!id) return;
+    state.checked[id] = e.target.checked;
+    persist(); render();
+  });
+
+  document.addEventListener("input", e => {
+    const id = e.target.id;
+    if (id !== "q-codes" && id !== "q-cases") return;
+    const scope = id.slice(2);
+    state.q[scope] = e.target.value;
+    const pos = e.target.selectionStart;
+    render();
+    const again = document.getElementById(id);
+    if (again) { again.focus(); again.setSelectionRange(pos, pos); }
+  });
+
+  render();
+}
+
+init();
+</script>
