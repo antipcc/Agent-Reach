@@ -1489,9 +1489,28 @@ def customer_banner(name: str, build_id: str) -> str:
 <div class="lic"><span>授权给 <b>{name}</b> 内部使用</span><span class="mono">{build_id}</span></div>'''
 
 
+# Artifact 平台会自动包上外层文档；自己托管则必须自己包。缺 viewport 时手机会按
+# 980px 桌面宽度渲染，缺 charset 声明时服务器发错 Content-Type 会导致中文乱码。
+def wrap_standalone(body: str, title: str) -> str:
+    return (
+        "<!doctype html>\n"
+        '<html lang="zh-CN">\n<head>\n'
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+        '<meta name="color-scheme" content="light dark">\n'
+        '<meta name="format-detection" content="telephone=no">\n'
+        f"<title>{title}</title>\n"
+        "<style>*{-webkit-tap-highlight-color:transparent}"
+        "html,body{margin:0;padding:0}img{max-width:100%}</style>\n"
+        "</head>\n<body>\n" + body + "\n</body>\n</html>\n"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-o", "--out", type=Path, default=KB_DIR / "demo.html")
+    parser.add_argument("--standalone", action="store_true",
+                        help="包成完整 HTML 文档（自己托管必须加，Artifact 发布不要加）")
     parser.add_argument("--customer", help="客户名称，生成带授权标识的专属版本")
     parser.add_argument("--no-webfonts", action="store_true",
                         help="完全不请求 Google Fonts，生成零外部请求的版本")
@@ -1511,6 +1530,8 @@ def main() -> int:
         # 插在 <header> 之前，任何页签都能看到
         html = html.replace("<header>", banner + "\n<header>", 1)
 
+    if args.standalone:
+        html = wrap_standalone(html, "海德堡排故台")
     args.out.write_text(html, encoding="utf-8")
     size = args.out.stat().st_size
     tag = f"，授权 {args.customer}" if args.customer else ""

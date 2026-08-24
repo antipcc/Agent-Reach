@@ -594,13 +594,35 @@ render();
 """
 
 
+# Artifact 平台会自动包上外层文档；自己托管则必须自己包。缺 viewport 时手机会按
+# 980px 桌面宽度渲染，缺 charset 声明时服务器发错 Content-Type 会导致中文乱码。
+def wrap_standalone(body: str, title: str) -> str:
+    return (
+        "<!doctype html>\n"
+        '<html lang="zh-CN">\n<head>\n'
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+        '<meta name="color-scheme" content="light dark">\n'
+        '<meta name="format-detection" content="telephone=no">\n'
+        f"<title>{title}</title>\n"
+        "<style>*{-webkit-tap-highlight-color:transparent}"
+        "html,body{margin:0;padding:0}img{max-width:100%}</style>\n"
+        "</head>\n<body>\n" + body + "\n</body>\n</html>\n"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-o", "--out", type=Path, default=KB_DIR / "capture.html")
+    parser.add_argument("--standalone", action="store_true",
+                        help="包成完整 HTML 文档（自己托管必须加，Artifact 发布不要加）")
     args = parser.parse_args()
     payload = json.dumps(build_payload(), ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("<", "\\u003c")
-    args.out.write_text(TEMPLATE.replace("__DATA__", payload), encoding="utf-8")
+    html = TEMPLATE.replace("__DATA__", payload)
+    if args.standalone:
+        html = wrap_standalone(html, "口述录入台")
+    args.out.write_text(html, encoding="utf-8")
     print(f"已生成 {args.out}（{args.out.stat().st_size / 1024:.1f} KB）")
     return 0
 

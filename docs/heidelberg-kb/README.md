@@ -212,3 +212,17 @@ python docs/heidelberg-kb/build_demo.py --customer "华东包装印刷" --no-web
 **字体处理**：Google Fonts 在中国大陆不可达，默认构建已改为非阻塞加载（`media="print"` + `onload`），拿不到就立刻用系统字体渲染。实测外网全断时内容 252ms 可见；`--no-webfonts` 则完全不发这个请求，161ms 可见。交付给客户一律用 `--no-webfonts`。
 
 **`--customer` 的作用**：在页眉插入「授权给 XX 内部使用」与一个由客户名派生的构建号。它不是访问控制——单文件页面做不到真正的鉴权——但它让每份分发可追溯，泄露时能定位来源，同时对客户显得是专门为他做的。真正的鉴权需要后端，等有付费客户后再做。
+
+### `--standalone`（自己托管必加）
+
+Artifact 平台会自动把页面片段包进完整文档；自己托管时必须用 `--standalone` 自己包，否则有三个真实后果（已实测）：浏览器进入**怪异模式**、**缺 viewport 导致手机按 980px 桌面宽度渲染**（字小到不可用）、**缺 charset 声明时服务器发错 Content-Type 会中文乱码**。
+
+```bash
+# 交付给客户（自己托管 / 直接发文件）
+python build_demo.py --no-webfonts --standalone -o dist/index.html
+python build_demo.py --no-webfonts --standalone --customer "华东包装印刷" -o dist/huadong.html
+python build_capture.py --standalone -o dist/luru.html
+
+# 发布到 Artifact 平台预览：不要加 --standalone
+python build_demo.py
+```
