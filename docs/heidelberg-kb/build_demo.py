@@ -44,11 +44,13 @@ def build_payload() -> dict[str, Any]:
     fault_codes = load("fault-codes.json")
     cases = load("cases.json")
     maintenance = load("maintenance.json")
+    synonyms = load("synonyms.json")
 
     for case in cases["entries"]:
         case["premium"] = case["id"] in PREMIUM_CASE_IDS
 
     return {
+        "synonyms": synonyms,
         "sources": {s["id"]: s for s in sources["sources"]},
         "machines": machines["machines"],
         "controlSystems": {c["id"]: c for c in machines["control_systems"]},
@@ -290,6 +292,49 @@ h3.sec{font-size:16px;margin:26px 0 8px;padding-top:16px;border-top:1px solid va
   padding-top:14px;border-top:1px solid var(--line)}
 .empty{text-align:center;color:var(--ink-3);font-size:14px;padding:36px 12px}
 [hidden]{display:none !important}
+
+/* ── 问诊 ───────────────────────────── */
+.chat{padding:6px 0 12px}
+.hero{padding:14px 0 6px}
+.hero .qd{max-width:38em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips .chip{border-radius:5px}
+.chips .chip:hover{border-color:var(--accent);color:var(--accent)}
+.bub-u{
+  background:var(--accent);color:var(--accent-ink);padding:9px 14px;border-radius:14px 14px 3px 14px;
+  margin:16px 0 10px auto;max-width:82%;width:fit-content;font-size:14.5px;line-height:1.6;
+}
+.bub-a{
+  background:var(--surface);border:1px solid var(--line);border-radius:3px 14px 14px 14px;
+  padding:13px 15px;margin-bottom:10px;
+}
+.why{font-size:13px;color:var(--ink-2);margin-bottom:12px;line-height:1.65}
+.res{border-top:1px solid var(--line);padding:13px 0 4px}
+.res:first-of-type{border-top:none;padding-top:0}
+.res.top .ttl{font-size:16.5px}
+.res-hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
+.rk{font-size:10.5px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.res:not(.top) .rk{color:var(--ink-3)}
+.match{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.res .steps{margin-top:4px}
+.more{font-size:13px;color:var(--accent);padding:7px 0 2px;font-weight:500}
+.more:hover{text-decoration:underline}
+.clar{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.clar-q{font-size:14.5px;font-weight:600;margin-bottom:9px}
+.opt.sm{padding:10px 13px;font-size:14px;margin-bottom:6px}
+.typing{display:flex;gap:5px;width:fit-content;padding:14px 16px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--ink-3);opacity:.4;
+  animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:.9}}
+@media (prefers-reduced-motion:reduce){.typing span{animation:none}}
+.composer{display:flex;gap:8px;align-items:center;position:sticky;bottom:0;
+  background:var(--bg);padding:10px 0 12px;margin-top:4px}
+.composer .search{margin:0;flex:1}
+.send{width:42px;height:42px;flex:none;border-radius:50%;background:var(--accent);
+  color:var(--accent-ink);font-size:19px;font-weight:700;line-height:1}
+.send:hover{opacity:.88}
 </style>
 
 <header>
@@ -320,8 +365,10 @@ h3.sec{font-size:16px;margin:26px 0 8px;padding-top:16px;border-top:1px solid va
 const D = __DATA__;
 
 const state = {
-  tab: "codes",
+  tab: "chat",
   machine: "all",
+  chat: [],
+  pending: false,
   cat: { codes: "all", cases: "all" },
   q: { codes: "", cases: "" },
   open: {},
@@ -515,6 +562,202 @@ function viewCases() {
     ${list.map(caseCard).join("") || '<div class="empty">没有匹配的案例。</div>'}`;
 }
 
+/* ══ 问诊引擎 ══════════════════════════════════════════════
+   纯本地检索，不调用任何大模型——因此它永远不会编造一个不存在的故障码。
+   命中不了就明说“知识库里没有”，而不是编一个看起来合理的答案。 */
+
+const SYN = D.synonyms;
+
+function hitTags(text) {
+  const t = text.toLowerCase();
+  const out = [];
+  for (const term of SYN.terms) {
+    if (term.variants.some(v => t.includes(v.toLowerCase()))) out.push(term);
+  }
+  return out;
+}
+
+/* 中文无空格，用 2~3 字滑窗提取候选词，过滤停用词后与条目文本比对 */
+function grams(text) {
+  const clean = text.replace(/[\s,，。、；;!！?？~—\-()（）"'"'']/g, "");
+  const stop = new Set(SYN.stopwords);
+  const out = new Set();
+  for (let n = 2; n <= 3; n++) {
+    for (let i = 0; i + n <= clean.length; i++) {
+      const g = clean.slice(i, i + n);
+      if (!stop.has(g) && !/^[0-9]+$/.test(g)) out.add(g);
+    }
+  }
+  SYN.stopwords.forEach(s => out.delete(s));
+  return [...out];
+}
+
+function blobOf(e) {
+  if (e._blob) return e._blob;
+  const parts = [e.title_zh, e.symptom_zh || "", e.meaning_zh || "", e.code || "", e.example || "",
+    D.categories[e.category] || "",
+    (e.causes || []).map(c => c.cause_zh + c.fix_zh).join(""),
+    (e.checks || []).join("")];
+  e._blob = parts.join(" ").toLowerCase();
+  return e._blob;
+}
+
+function diagnose(text, extraTags) {
+  const tags = hitTags(text);
+  (extraTags || []).forEach(name => {
+    const t = SYN.terms.find(x => x.tag === name);
+    if (t && !tags.includes(t)) tags.push(t);
+  });
+  const tagNames = tags.map(t => t.tag);
+  const gs = grams(text);
+  const pool = [...D.cases, ...D.faultCodes].filter(matches);
+  const why = new Set();
+
+  const scored = pool.map(e => {
+    let s = 0;
+    const blob = blobOf(e);
+    const title = (e.title_zh + (e.code || "")).toLowerCase();
+
+    for (const t of tags) {
+      if ((t.boost_entries || []).includes(e.id)) { s += 12; why.add(t.tag); }
+      if ((t.categories || []).includes(e.category)) s += 3;
+      if (t.variants.some(v => blob.includes(v.toLowerCase()))) { s += 2; why.add(t.tag); }
+    }
+    for (const g of gs) {
+      if (title.includes(g)) s += 2.5;
+      else if (blob.includes(g)) s += 0.8;
+    }
+    // 直接报了代码：优先级最高
+    if (e.code && e.code.length > 3) {
+      const stem = e.code.toLowerCase().replace(/[\s<>]|槽位号/g, "").slice(0, 6);
+      if (stem.length > 2 && text.toLowerCase().replace(/\s/g, "").includes(stem)) {
+        s += 25;
+        why.add(e.code.split(/[\s<]/)[0]);
+      }
+    }
+    return { e, s };
+  }).filter(x => x.s > 3).sort((a, b) => b.s - a.s);
+
+  const clar = SYN.clarifiers.find(c => c.trigger_tags.some(t => tagNames.includes(t)));
+  return { hits: scored.slice(0, 5), tags: [...why], clarifier: clar, total: scored.length };
+}
+
+function resultCard(x, rank) {
+  const e = x.e;
+  const isCase = !!e.causes;
+  const conf = Math.min(96, Math.round(38 + x.s * 3.2));
+  if (isCase) {
+    const fx = D.fixableLevels[e.field_fixable];
+    const tone = { onsite: "ok", parts_needed: "warn", service_required: "stop" }[e.field_fixable];
+    const top = e.causes.filter(c => c.likelihood === "high");
+    const show = (top.length ? top : e.causes.slice(0, 2));
+    return `<div class="res ${rank === 0 ? "top" : ""}">
+      <div class="res-hd"><span class="rk lat">${rank === 0 ? "最可能" : "也可能"}</span>
+        <span class="match mono">匹配度 ${conf}%</span></div>
+      <div class="ttl">${esc(e.title_zh)}</div>
+      <div class="meta"><span class="tag">${esc(D.categories[e.category])}</span>
+        <span class="tag ${tone}">${esc(fx.name_zh)}</span>
+        <span class="eta mono">${e.eta_minutes[0]}–${e.eta_minutes[1]} 分钟</span>${confBadge(e.confidence)}</div>
+      <div class="lbl lat" style="margin-top:11px">先查这几项</div>
+      ${show.map(c => `<div class="cause"><div class="lk">
+        <div class="lkbar">${[1, 2, 3].map(i => `<i class="${
+          i <= { high: 3, medium: 2, low: 1 }[c.likelihood] ? "on" : ""}"></i>`).join("")}</div>
+        <div class="lktxt">${{ high: "高", medium: "中", low: "低" }[c.likelihood]}</div></div>
+        <div class="cause-b"><div class="c">${esc(c.cause_zh)}</div>
+        <div class="f">→ ${esc(c.fix_zh)}</div></div></div>`).join("")}
+      ${e.causes.length > show.length
+        ? `<button class="more" data-goto-case="${esc(e.id)}">查看全部 ${e.causes.length} 条原因与出处 →</button>` : ""}
+      ${srcBlock(e.sources)}</div>`;
+  }
+  return `<div class="res ${rank === 0 ? "top" : ""}">
+    <div class="res-hd"><span class="rk lat">${rank === 0 ? "最可能" : "相关代码"}</span>
+      <span class="match mono">匹配度 ${conf}%</span></div>
+    <div class="row1"><span class="code mono">${esc(e.code)}</span>
+      <span class="pill ${esc(e.severity)} lat">${
+        { stop: "停机", warning: "警告", info: "提示" }[e.severity]}</span></div>
+    <div class="ttl">${esc(e.title_zh)}</div>
+    <div class="meta">${e.control_systems.map(c =>
+      `<span class="tag">${esc(D.controlSystems[c].name_zh)}</span>`).join("")}${confBadge(e.confidence)}</div>
+    <div class="lbl lat" style="margin-top:11px">排查顺序</div>
+    <ol class="steps">${e.checks.slice(0, 3).map(c => `<li>${esc(c)}</li>`).join("")}</ol>
+    ${e.safety_zh ? `<div class="safety"><b class="lat">SAFETY · 安全</b>${esc(e.safety_zh)}</div>` : ""}
+    ${srcBlock(e.sources)}</div>`;
+}
+
+function ask(text, extraTags) {
+  state.chat.push({ who: "u", text: text });
+  const r = diagnose(text, extraTags);
+  state.chat.push({ who: "a", r: r, q: text, tags: extraTags || [] });
+  state.pending = true;
+  render();
+  setTimeout(() => { state.pending = false; render(); scrollBottom(); }, 320);
+}
+
+function scrollBottom() {
+  const el = document.getElementById("chat-end");
+  if (el) el.scrollIntoView({ block: "end", behavior: "smooth" });
+}
+
+const EXAMPLES = [
+  "飞达老是双张，检测器一直停机",
+  "第4组套不准，十字线对不上",
+  "印品上有杠子，间距挺均匀",
+  "递纸吸嘴哒哒响，吸纸不牢",
+  "水箱不制冷，酒精挥发特别快",
+  "屏幕报 HAK 4"
+];
+
+function viewChat() {
+  document.getElementById("notice").hidden = true;
+  const m = machineById(state.machine);
+  const scope = state.machine === "all"
+    ? `全部 ${D.cases.length + D.faultCodes.length} 条`
+    : `${m.name} 适用的条目`;
+
+  const msgs = state.chat.map((msg, i) => {
+    if (msg.who === "u") return `<div class="bub-u">${esc(msg.text)}</div>`;
+    const r = msg.r;
+    if (!r.hits.length) {
+      return `<div class="bub-a"><p style="margin:0 0 8px"><b>知识库里没有能对上的条目。</b></p>
+        <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink-2)">
+        本引擎只在 ${scope}里检索，不会替你编一个听起来合理的答案。
+        换个说法试试，或者补充部位（飞达 / 前规 / 机组 / 收纸）和现象。</p>
+        <div class="chips">${["飞达", "前规 / 拉规", "机组", "收纸", "电气"].map(c =>
+          `<button class="chip" data-say="${esc(c)}出问题">${esc(c)}</button>`).join("")}</div></div>`;
+    }
+    const last = i === state.chat.length - 1;
+    return `<div class="bub-a">
+      <div class="why">依据你说的${r.tags.length
+        ? "「" + r.tags.map(esc).join("」「") + "」" : "内容"}，在${esc(scope)}中检索到 ${r.total} 条相关，按匹配度排序：</div>
+      ${r.hits.map((x, k) => resultCard(x, k)).join("")}
+      ${last && r.clarifier ? `<div class="clar">
+        <div class="clar-q">${esc(r.clarifier.question_zh)}</div>
+        ${r.clarifier.options.map(o => `<button class="opt sm" data-clar="${esc(r.clarifier.id)}"
+          data-optlabel="${esc(o.label_zh)}">${esc(o.label_zh)}</button>`).join("")}</div>` : ""}
+    </div>`;
+  }).join("");
+
+  return `<div class="chat">
+    ${state.chat.length ? "" : `<div class="hero">
+      <h2 class="q">机器怎么了？用你平时说话的方式讲。</h2>
+      <p class="qd">支持车间口语——「双张」「甩角」「哒哒响」「杠子」都听得懂。
+      引擎只从 ${D.faultCodes.length} 条故障码和 ${D.cases.length} 个案例里检索，<b>不会编造代码</b>；
+      对不上就直说没有。</p>
+      <div class="lbl lat">试试这些</div>
+      <div class="chips">${EXAMPLES.map(e =>
+        `<button class="chip" data-say="${esc(e)}">${esc(e)}</button>`).join("")}</div></div>`}
+    ${msgs}
+    ${state.pending ? '<div class="bub-a typing"><span></span><span></span><span></span></div>' : ""}
+    <div id="chat-end"></div>
+  </div>
+  <form class="composer" id="chat-form">
+    <input class="search" id="chat-in" autocomplete="off"
+      placeholder="描述故障现象…" value="">
+    <button type="submit" class="send" aria-label="发送">↑</button>
+  </form>
+  ${state.chat.length ? '<button class="back" data-clear-chat="1">清空重问</button>' : ""}`;
+}
+
 /* ── 引导诊断 ── */
 function viewDiag() {
   const pool = D.cases.filter(matches);
@@ -647,8 +890,8 @@ function viewAbout() {
 
 /* ── 渲染与事件 ── */
 const TABS = [
-  ["codes", "查码", viewCodes], ["diag", "诊断", viewDiag], ["cases", "案例", viewCases],
-  ["maint", "保养", viewMaint], ["about", "关于", viewAbout]
+  ["chat", "问诊", viewChat], ["codes", "查码", viewCodes], ["diag", "引导", viewDiag],
+  ["cases", "案例", viewCases], ["maint", "保养", viewMaint], ["about", "关于", viewAbout]
 ];
 
 function render() {
@@ -673,10 +916,37 @@ function init() {
     persist(); render();
   });
 
+  const form = () => document.getElementById("chat-form");
+  document.addEventListener("submit", e => {
+    if (!e.target.matches("#chat-form")) return;
+    e.preventDefault();
+    const input = document.getElementById("chat-in");
+    const v = input.value.trim();
+    if (!v) return;
+    input.value = "";
+    ask(v);
+  });
+
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-tab],[data-cat],[data-open],[data-iv],[data-diag-cat],[data-diag-case],[data-diag-back],[data-unlock]");
+    const t = e.target.closest("[data-tab],[data-cat],[data-open],[data-iv],[data-diag-cat],[data-diag-case],[data-diag-back],[data-unlock],[data-say],[data-clar],[data-clear-chat],[data-goto-case]");
     if (!t) return;
     const d = t.dataset;
+    if (d.say) { ask(d.say); return; }
+    if (d.clearChat) { state.chat = []; render(); return; }
+    if (d.clar) {
+      const c = SYN.clarifiers.find(x => x.id === d.clar);
+      const opt = c && c.options.find(o => o.label_zh === d.optlabel);
+      if (opt) ask(d.optlabel, opt.adds);
+      return;
+    }
+    if (d.gotoCase) {
+      state.tab = "cases"; state.cat.cases = "all"; state.q.cases = "";
+      state.open["k" + d.gotoCase] = true;
+      render();
+      const el = document.querySelector(`[data-open="k${d.gotoCase}"]`);
+      if (el) el.scrollIntoView({ block: "center" });
+      return;
+    }
     if (d.tab) state.tab = d.tab;
     else if (d.cat) state.cat[d.scope] = d.cat;
     else if (d.open) state.open[d.open] = !state.open[d.open];

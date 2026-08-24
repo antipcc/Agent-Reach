@@ -1,0 +1,340 @@
+{
+  "$comment": "车间口语词表——问诊引擎靠它把机长的原话映射到知识库条目。variants 是同一件事的各种说法（含黑话、错别字常见写法）；categories 给该分类下所有条目加权；boost_entries 直接指向最相关的条目。validate.py 会校验 boost_entries 引用的条目确实存在。",
+  "version": "1.0.0",
+  "updated": "2026-08-24",
+
+  "stopwords": [
+    "的", "了", "是", "在", "有", "和", "就", "都", "而", "及", "与", "着", "或",
+    "我", "我们", "你", "他", "它", "这", "那", "什么", "怎么", "怎样", "为什么",
+    "现在", "今天", "刚才", "一直", "总是", "老是", "经常", "有时", "偶尔",
+    "机器", "机子", "设备", "印刷机", "海德堡", "问题", "故障", "毛病", "情况",
+    "出现", "发生", "请问", "帮忙", "看看", "一下", "如何", "可能", "应该",
+    "师傅", "求助", "急", "谢谢"
+  ],
+
+  "terms": [
+    {
+      "tag": "双张",
+      "variants": ["双张", "重张", "两张一起", "叠张", "带两张", "多张"],
+      "categories": ["feeder"],
+      "boost_entries": ["feeder-double-sheet"]
+    },
+    {
+      "tag": "空张",
+      "variants": ["空张", "吸不上", "吸不起", "吸不住", "不下纸", "不走纸", "没纸过来", "断纸"],
+      "categories": ["feeder"],
+      "boost_entries": ["feeder-miss-sheet"]
+    },
+    {
+      "tag": "歪张",
+      "variants": ["歪", "斜", "跑偏", "偏斜", "不正", "走偏"],
+      "categories": ["feeder", "register"],
+      "boost_entries": ["feeder-skew", "register-front-lay-skew"]
+    },
+    {
+      "tag": "吸嘴",
+      "variants": ["吸嘴", "吸盘", "分纸嘴", "递纸嘴", "嘴子"],
+      "categories": ["feeder", "pneumatic"],
+      "boost_entries": ["feeder-miss-sheet", "pneumatic-low-vacuum"]
+    },
+    {
+      "tag": "异响",
+      "variants": ["哒哒", "哒哒响", "咔咔", "异响", "响声", "有声音", "咯噔"],
+      "categories": ["feeder", "pneumatic", "transfer"],
+      "boost_entries": ["pneumatic-low-vacuum", "feeder-miss-sheet"]
+    },
+    {
+      "tag": "真空",
+      "variants": ["真空", "吸力", "吸力小", "气压", "气不足", "没气", "漏气", "气泵", "风泵"],
+      "categories": ["pneumatic"],
+      "boost_entries": ["pneumatic-low-vacuum"]
+    },
+    {
+      "tag": "静电",
+      "variants": ["静电", "吸在一起", "粘一起", "撞不齐"],
+      "categories": ["feeder"],
+      "boost_entries": ["paper-static"]
+    },
+    {
+      "tag": "搬迁",
+      "variants": ["搬", "搬迁", "挪机", "运回", "新装", "刚装"],
+      "categories": ["feeder"],
+      "boost_entries": ["feeder-relocation-drift"]
+    },
+    {
+      "tag": "套准",
+      "variants": ["套不准", "套印不准", "套准", "规矩不准", "对不上", "十字线", "规矩", "套色"],
+      "categories": ["register", "transfer"],
+      "boost_entries": ["register-front-lay-skew", "register-side-lay", "cp2000-register-fault-bek"]
+    },
+    {
+      "tag": "前规",
+      "variants": ["前规", "挡纸舌", "前挡规"],
+      "categories": ["register"],
+      "boost_entries": ["register-front-lay-skew"]
+    },
+    {
+      "tag": "侧规",
+      "variants": ["侧规", "拉规", "拉纸", "边规"],
+      "categories": ["register"],
+      "boost_entries": ["register-side-lay"]
+    },
+    {
+      "tag": "甩角",
+      "variants": ["甩角", "甩尾", "拖梢不准", "一个角"],
+      "categories": ["register", "transfer"],
+      "boost_entries": ["register-side-lay", "transfer-dead-gripper"]
+    },
+    {
+      "tag": "叼牙",
+      "variants": ["叼牙", "死牙", "牙排", "叼不住", "牙片", "牙垫", "咬牙"],
+      "categories": ["transfer"],
+      "boost_entries": ["transfer-dead-gripper"]
+    },
+    {
+      "tag": "剥皮",
+      "variants": ["剥皮", "掉皮", "撕起", "叼口破"],
+      "categories": ["transfer"],
+      "boost_entries": ["transfer-dead-gripper"]
+    },
+    {
+      "tag": "皱纸",
+      "variants": ["皱", "起皱", "打折", "褶", "折子"],
+      "categories": ["transfer"],
+      "boost_entries": ["transfer-cam-roller", "transfer-swing-gripper"]
+    },
+    {
+      "tag": "烂纸",
+      "variants": ["烂纸", "撕破", "破损", "纸破"],
+      "categories": ["transfer"],
+      "boost_entries": ["transfer-cam-roller"]
+    },
+    {
+      "tag": "递纸",
+      "variants": ["递纸", "摆动牙", "递纸摆", "交接", "传纸"],
+      "categories": ["transfer"],
+      "boost_entries": ["transfer-swing-gripper", "transfer-cam-roller"]
+    },
+    {
+      "tag": "墨杠",
+      "variants": ["墨杠", "杠子", "条杠", "道子", "横杠", "杠"],
+      "categories": ["quality"],
+      "boost_entries": ["quality-ink-bars", "quality-water-bars"]
+    },
+    {
+      "tag": "水杠",
+      "variants": ["水杠", "白杠", "亮杠"],
+      "categories": ["quality"],
+      "boost_entries": ["quality-water-bars"]
+    },
+    {
+      "tag": "重影",
+      "variants": ["重影", "鬼影", "双影", "虚影", "网点不实"],
+      "categories": ["quality"],
+      "boost_entries": ["quality-ghosting"]
+    },
+    {
+      "tag": "糊版",
+      "variants": ["糊版", "堵版", "网点糊", "并网"],
+      "categories": ["quality"],
+      "boost_entries": ["quality-scumming"]
+    },
+    {
+      "tag": "起脏",
+      "variants": ["起脏", "上脏", "挂脏", "带脏", "空白处有墨", "版脏"],
+      "categories": ["quality"],
+      "boost_entries": ["quality-scumming"]
+    },
+    {
+      "tag": "蹭脏",
+      "variants": ["蹭脏", "背面脏", "反面脏", "粘脏", "背印"],
+      "categories": ["quality", "delivery"],
+      "boost_entries": ["quality-set-off", "delivery-powder-blockage"]
+    },
+    {
+      "tag": "花版",
+      "variants": ["花版", "掉版", "磨版", "耐印力", "版子不耐用", "版磨损"],
+      "categories": ["quality"],
+      "boost_entries": ["quality-plate-wear"]
+    },
+    {
+      "tag": "橡皮布",
+      "variants": ["橡皮布", "胶布", "包衬", "低凹", "压伤"],
+      "categories": ["quality", "unit"],
+      "boost_entries": ["quality-ghosting"]
+    },
+    {
+      "tag": "水墨平衡",
+      "variants": ["水墨平衡", "水大", "水小", "乳化", "墨色不稳", "上色不稳", "墨色飘"],
+      "categories": ["dampening", "inking", "quality"],
+      "boost_entries": ["quality-scumming", "inking-roller-glazing"]
+    },
+    {
+      "tag": "润版液",
+      "variants": ["润版液", "药水", "水斗液", "ph", "导电率", "酒精", "异丙醇"],
+      "categories": ["dampening"],
+      "boost_entries": ["dampening-chiller", "quality-scumming"]
+    },
+    {
+      "tag": "水箱",
+      "variants": ["水箱", "冷水机", "不制冷", "水温高", "温度高", "挥发快"],
+      "categories": ["dampening"],
+      "boost_entries": ["dampening-chiller"]
+    },
+    {
+      "tag": "水辊",
+      "variants": ["水辊", "水棍", "计量辊", "水斗辊", "绒套"],
+      "categories": ["dampening"],
+      "boost_entries": ["quality-water-bars", "cpt-ltk"]
+    },
+    {
+      "tag": "墨辊",
+      "variants": ["墨辊", "墨棍", "胶辊", "靠版辊", "串墨辊", "传墨辊"],
+      "categories": ["inking"],
+      "boost_entries": ["inking-roller-glazing", "quality-ink-bars"]
+    },
+    {
+      "tag": "晶化",
+      "variants": ["晶化", "釉化", "结晶", "钙化", "打滑", "传墨不良", "辊面发亮"],
+      "categories": ["inking"],
+      "boost_entries": ["inking-roller-glazing"]
+    },
+    {
+      "tag": "墨键",
+      "variants": ["墨键", "墨斗", "墨区", "预置", "不跟预置"],
+      "categories": ["inking"],
+      "boost_entries": ["cp2000-ipc-failure"]
+    },
+    {
+      "tag": "收纸",
+      "variants": ["收纸", "收纸不齐", "堆不齐", "收纸乱", "下纸台", "纸堆乱"],
+      "categories": ["delivery"],
+      "boost_entries": ["delivery-uneven-stack"]
+    },
+    {
+      "tag": "喷粉",
+      "variants": ["喷粉", "不出粉", "粉少", "防粘粉", "粉堵"],
+      "categories": ["delivery"],
+      "boost_entries": ["delivery-powder-blockage"]
+    },
+    {
+      "tag": "纸张未清空",
+      "variants": ["未清空", "没清空", "有纸残留", "提示有纸"],
+      "categories": ["delivery"],
+      "boost_entries": ["cp2000-delivery-not-empty"]
+    },
+    {
+      "tag": "不启动",
+      "variants": ["不启动", "开不了机", "启动不了", "按了没反应", "起不来", "不能开机"],
+      "categories": ["safety", "control", "drive"],
+      "boost_entries": ["cp2000-safety-main-drive-lock", "cp2000-ipc-failure", "cpt-sek"]
+    },
+    {
+      "tag": "闷车",
+      "variants": ["闷车", "抱死", "卡死", "突然停", "自动停机", "急停"],
+      "categories": ["drive", "safety"],
+      "boost_entries": ["cp2000-safety-main-drive-lock", "cd74-slt-svt"]
+    },
+    {
+      "tag": "安全报警",
+      "variants": ["安全", "护罩", "人体检测", "光电", "安全回路", "急停按钮"],
+      "categories": ["safety"],
+      "boost_entries": ["cpt-sek", "cp2000-safety-main-drive-lock", "pm52-unit-guard-codes"]
+    },
+    {
+      "tag": "主电机",
+      "variants": ["主电机", "主马达", "主传动", "编码器", "变频器", "驱动器", "过流"],
+      "categories": ["drive"],
+      "boost_entries": ["cd74-slt-svt", "pm52-g10", "cpt-qm46-15-01"]
+    },
+    {
+      "tag": "控制台",
+      "variants": ["控制台", "屏幕", "触摸屏", "显示器", "黑屏", "死机", "白屏", "触摸没反应", "工控机"],
+      "categories": ["control"],
+      "boost_entries": ["cp2000-ipc-failure", "cp2000-comms-lost"]
+    },
+    {
+      "tag": "通讯",
+      "variants": ["通讯", "通信", "连不上", "掉线", "失去连接", "网络"],
+      "categories": ["control"],
+      "boost_entries": ["cp2000-comms-lost", "prinect-inpress-comm"]
+    },
+    {
+      "tag": "板卡",
+      "variants": ["板子", "电路板", "板卡", "槽位", "电气柜", "线路板"],
+      "categories": ["electrical"],
+      "boost_entries": ["cpt-hak", "cpt-eak", "cpt-ltk"]
+    },
+    {
+      "tag": "翻转",
+      "variants": ["翻转", "双面", "正反面", "换向", "perfector"],
+      "categories": ["transfer"],
+      "boost_entries": ["pm52-perfector-errors"]
+    },
+    {
+      "tag": "联机测量",
+      "variants": ["联机测量", "自动套准", "inpress", "autoregister", "色彩测量"],
+      "categories": ["control"],
+      "boost_entries": ["prinect-inpress-comm"]
+    },
+    {
+      "tag": "橡皮滚筒控制",
+      "variants": ["blt", "橡皮滚筒不就绪", "合压不动作", "不就绪"],
+      "categories": ["unit"],
+      "boost_entries": ["cp2000-s-blt-con"]
+    },
+    {
+      "tag": "润滑",
+      "variants": ["润滑", "打油", "黄油", "油标", "缺油", "油泵"],
+      "categories": ["lubrication"],
+      "boost_entries": []
+    }
+  ],
+
+  "clarifiers": [
+    {
+      "id": "register-scope",
+      "trigger_tags": ["套准", "甩角"],
+      "question_zh": "套不准的表现更接近下面哪一种？这一步能把范围缩掉一大半。",
+      "options": [
+        { "label_zh": "所有色组都相对纸边漂，张与张随机", "adds": ["前规", "侧规", "歪张"] },
+        { "label_zh": "只有某一个色组整体偏，方向稳定", "adds": ["橡皮布", "套准"] },
+        { "label_zh": "局部套不准，还带重影或叼口剥皮", "adds": ["叼牙", "重影", "剥皮"] },
+        { "label_zh": "叼口准、拖梢张开成扇形", "adds": ["静电", "套准"] }
+      ]
+    },
+    {
+      "id": "bars-kind",
+      "trigger_tags": ["墨杠"],
+      "question_zh": "杠子是什么样的？规律不同，根因完全不同。",
+      "options": [
+        { "label_zh": "深色杠，间距均匀像齿距", "adds": ["墨杠"] },
+        { "label_zh": "发白发亮的杠", "adds": ["水杠", "水辊"] },
+        { "label_zh": "只在叼口附近固定位置", "adds": ["墨杠", "橡皮布"] },
+        { "label_zh": "位置不固定、时有时无", "adds": ["墨杠", "墨辊"] }
+      ]
+    },
+    {
+      "id": "stop-kind",
+      "trigger_tags": ["不启动", "闷车"],
+      "question_zh": "更接近哪种情况？",
+      "options": [
+        { "label_zh": "根本起不来，屏上有报警", "adds": ["不启动", "安全报警"] },
+        { "label_zh": "运行中突然停死、盘不动", "adds": ["闷车", "主电机"] },
+        { "label_zh": "屏幕本身黑屏或没反应", "adds": ["控制台"] },
+        { "label_zh": "气压不够、机器不让开", "adds": ["真空"] }
+      ]
+    },
+    {
+      "id": "feeder-kind",
+      "trigger_tags": ["空张", "双张", "歪张"],
+      "question_zh": "飞达这边，纸主要是怎么个不对法？",
+      "options": [
+        { "label_zh": "吸不起来、经常空张", "adds": ["空张", "吸嘴"] },
+        { "label_zh": "一次带起两张以上", "adds": ["双张"] },
+        { "label_zh": "纸是歪的、两边不一致", "adds": ["歪张"] },
+        { "label_zh": "纸互相粘、撞不齐", "adds": ["静电"] }
+      ]
+    }
+  ]
+}

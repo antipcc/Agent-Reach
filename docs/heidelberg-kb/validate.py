@@ -47,6 +47,7 @@ class Validator:
         self.fault_codes = load("fault-codes.json")
         self.cases = load("cases.json")
         self.maintenance = load("maintenance.json")
+        self.synonyms = load("synonyms.json")
 
         self.source_ids = {s["id"] for s in self.sources["sources"]}
         self.machine_ids = {m["id"] for m in self.machines["machines"]}
@@ -232,6 +233,57 @@ class Validator:
         if declared != actual:
             self.err("maintenance", f"entry_count 声明 {declared} 与实际 {actual} 不符")
 
+    def validate_synonyms(self) -> None:
+        """校验口语词表：boost_entries 必须指向真实条目，避免问诊引擎指向空条目。"""
+        entry_ids = ({e["id"] for e in self.fault_codes["entries"]}
+                     | {e["id"] for e in self.cases["entries"]})
+        tags: set[str] = set()
+
+        for term in self.synonyms["terms"]:
+            tag = term.get("tag", "?")
+            where = f"synonyms/{tag}"
+            if tag in tags:
+                self.err(where, "tag 重复")
+            tags.add(tag)
+
+            if not term.get("variants"):
+                self.err(where, "缺少 variants —— 至少要有一种说法")
+            for variant in term.get("variants", []):
+                if not variant.strip():
+                    self.err(where, "variants 含空字符串")
+            for cat in term.get("categories", []):
+                if cat not in self.category_ids:
+                    self.err(where, f"categories 取值 {cat!r} 未定义")
+            for ref in term.get("boost_entries", []):
+                if ref not in entry_ids:
+                    self.err(where, f"boost_entries 指向不存在的条目 {ref!r}")
+
+        for clar in self.synonyms.get("clarifiers", []):
+            where = f"synonyms/clarifiers/{clar.get('id', '?')}"
+            if not clar.get("question_zh"):
+                self.err(where, "缺少 question_zh")
+            for tag in clar.get("trigger_tags", []):
+                if tag not in tags:
+                    self.err(where, f"trigger_tags 引用了未定义的 tag {tag!r}")
+            for opt in clar.get("options", []):
+                if not opt.get("label_zh"):
+                    self.err(where, "选项缺少 label_zh")
+                for tag in opt.get("adds", []):
+                    if tag not in tags:
+                        self.err(where, f"选项 adds 引用了未定义的 tag {tag!r}")
+
+        # 覆盖率提示：没有任何口语词能命中的条目，问诊时很难被检索到。
+        reachable: set[str] = set()
+        cat_to_entries: dict[str, set[str]] = {}
+        for entry in self.fault_codes["entries"] + self.cases["entries"]:
+            cat_to_entries.setdefault(entry["category"], set()).add(entry["id"])
+        for term in self.synonyms["terms"]:
+            reachable.update(term.get("boost_entries", []))
+            for cat in term.get("categories", []):
+                reachable.update(cat_to_entries.get(cat, set()))
+        for orphan in sorted(entry_ids - reachable):
+            self.warn("synonyms", f"条目 {orphan!r} 没有任何口语词可命中，问诊难以检索到")
+
     def validate_sources(self) -> None:
         seen: set[str] = set()
         for source in self.sources["sources"]:
@@ -268,6 +320,7 @@ class Validator:
         self.validate_fault_codes()
         self.validate_cases()
         self.validate_maintenance()
+        self.validate_synonyms()
 
         counts = {
             "故障码": len(self.fault_codes["entries"]),
@@ -275,6 +328,7 @@ class Validator:
             "案例": len(self.cases["entries"]),
             "保养项": len(self.maintenance["entries"]),
             "易损件": len(self.maintenance["wear_parts"]),
+            "口语词": len(self.synonyms["terms"]),
             "来源": len(self.sources["sources"]),
             "机型": len(self.machines["machines"]),
         }

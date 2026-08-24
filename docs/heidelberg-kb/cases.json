@@ -2,14 +2,24 @@
   "$comment": "现场排故案例库。字段设计说明：field_fixable 与 eta_minutes 回答机长在停机瞬间的第一个决策——我自己能不能搞定、要多久、要不要叫人；causes 按 likelihood 由高到低排列，强制“先查高概率项”的排查纪律。machines 取 \"*\" 表示与机型无关的通用机械/工艺问题。",
   "version": "1.0.0",
   "updated": "2026-08-24",
-  "entry_count": 18,
-
+  "entry_count": 21,
   "field_fixable_levels": [
-    { "id": "onsite", "name_zh": "现场可排", "desc_zh": "机长或机组人员用随机工具即可处理，通常不需备件。" },
-    { "id": "parts_needed", "name_zh": "需备件", "desc_zh": "需更换易损件，取决于备件是否在库。" },
-    { "id": "service_required", "name_zh": "需专业维修", "desc_zh": "涉及电气柜内部、主传动、滚筒轴承等，应由受训人员或厂家/专业维修商处理。" }
+    {
+      "id": "onsite",
+      "name_zh": "现场可排",
+      "desc_zh": "机长或机组人员用随机工具即可处理，通常不需备件。"
+    },
+    {
+      "id": "parts_needed",
+      "name_zh": "需备件",
+      "desc_zh": "需更换易损件，取决于备件是否在库。"
+    },
+    {
+      "id": "service_required",
+      "name_zh": "需专业维修",
+      "desc_zh": "涉及电气柜内部、主传动、滚筒轴承等，应由受训人员或厂家/专业维修商处理。"
+    }
   ],
-
   "entries": [
     {
       "id": "feeder-miss-sheet",
@@ -17,18 +27,51 @@
       "category": "feeder",
       "symptom_zh": "分纸吸嘴吸不住纸或间歇吸空，机器报空张停机。",
       "field_fixable": "onsite",
-      "eta_minutes": [10, 30],
-      "machines": ["*"],
+      "eta_minutes": [
+        10,
+        30
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "吸嘴橡皮圈老化、开裂、孔径变形", "fix_zh": "更换吸嘴橡皮——属高频易损件，应常备。" },
-        { "likelihood": "high", "cause_zh": "吸嘴距纸堆过远", "fix_zh": "调整压纸脚高度或纸堆自动跟踪高度，使分纸吸嘴距纸堆面保持 3～5 mm。" },
-        { "likelihood": "medium", "cause_zh": "气路漏气：分气阀磨损、气管破裂、接头松脱", "fix_zh": "听漏、涂皂液查漏，分段夹管定位；分气阀密封面拉伤则研磨或更换。" },
-        { "likelihood": "medium", "cause_zh": "气泵真空度不足", "fix_zh": "检查干式泵碳精片磨损与进气滤芯堵塞，按小时数更换。" },
-        { "likelihood": "low", "cause_zh": "纸张四角翘曲（荷叶边）使吸嘴吸不实", "fix_zh": "纸张调湿处理或压平；调整吹风。" },
-        { "likelihood": "low", "cause_zh": "输纸检测电眼脏污误报", "fix_zh": "清洁电眼，纳入每周保养。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "吸嘴橡皮圈老化、开裂、孔径变形",
+          "fix_zh": "更换吸嘴橡皮——属高频易损件，应常备。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "吸嘴距纸堆过远",
+          "fix_zh": "调整压纸脚高度或纸堆自动跟踪高度，使分纸吸嘴距纸堆面保持 3～5 mm。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "气路漏气：分气阀磨损、气管破裂、接头松脱",
+          "fix_zh": "听漏、涂皂液查漏，分段夹管定位；分气阀密封面拉伤则研磨或更换。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "气泵真空度不足",
+          "fix_zh": "检查干式泵碳精片磨损与进气滤芯堵塞，按小时数更换。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "纸张四角翘曲（荷叶边）使吸嘴吸不实",
+          "fix_zh": "纸张调湿处理或压平；调整吹风。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "输纸检测电眼脏污误报",
+          "fix_zh": "清洁电眼，纳入每周保养。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-feeder-adjust", "cnzhixiang-feeder-faults", "sina-feeder-cases"]
+      "sources": [
+        "bisenet-feeder-adjust",
+        "cnzhixiang-feeder-faults",
+        "sina-feeder-cases"
+      ]
     },
     {
       "id": "feeder-double-sheet",
@@ -36,16 +79,40 @@
       "category": "feeder",
       "symptom_zh": "双张检测器频繁动作停机，或双张进入机器。",
       "field_fixable": "onsite",
-      "eta_minutes": [10, 25],
-      "machines": ["*"],
+      "eta_minutes": [
+        10,
+        25
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "松纸吹风过大或压纸脚失效，一次带起多张", "fix_zh": "调整松纸吹嘴风量至吹散最上面 3～5 张呈浮起状；检查压纸脚弹簧疲劳与位置。" },
-        { "likelihood": "high", "cause_zh": "纸张粘连：裁切刀口粘边、受潮、静电吸附", "fix_zh": "上纸前必须扇纸（松纸）撞齐；静电严重时按静电条目处理。" },
-        { "likelihood": "medium", "cause_zh": "分纸吸嘴吸力过大或距纸堆过近", "fix_zh": "下调吸力、复核 3～5 mm 间距。" },
-        { "likelihood": "medium", "cause_zh": "双张检测器间隙与当前纸厚不符", "fix_zh": "按当前纸厚重新标定；机械式检测辊间隙用塞尺校验。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "松纸吹风过大或压纸脚失效，一次带起多张",
+          "fix_zh": "调整松纸吹嘴风量至吹散最上面 3～5 张呈浮起状；检查压纸脚弹簧疲劳与位置。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "纸张粘连：裁切刀口粘边、受潮、静电吸附",
+          "fix_zh": "上纸前必须扇纸（松纸）撞齐；静电严重时按静电条目处理。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "分纸吸嘴吸力过大或距纸堆过近",
+          "fix_zh": "下调吸力、复核 3～5 mm 间距。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "双张检测器间隙与当前纸厚不符",
+          "fix_zh": "按当前纸厚重新标定；机械式检测辊间隙用塞尺校验。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-feeder-adjust", "cnzhixiang-feeder-faults"]
+      "sources": [
+        "bisenet-feeder-adjust",
+        "cnzhixiang-feeder-faults"
+      ]
     },
     {
       "id": "feeder-skew",
@@ -53,16 +120,40 @@
       "category": "feeder",
       "symptom_zh": "纸张到前规时规律性歪斜，两侧不一致。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 90],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        90
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "飞达整体与主机不平行（安装或撞击后移位）", "fix_zh": "校正飞达相对主机的平行度，并调节飞达两侧与走纸杆，使两侧送纸快慢一致——这是歪张的机械性根因。" },
-        { "likelihood": "high", "cause_zh": "两侧分纸吸嘴高低不一致、两侧松纸吹风不对称", "fix_zh": "逐侧复校吸嘴高度与吹风量。" },
-        { "likelihood": "medium", "cause_zh": "输纸带张力不均、压纸轮两侧压力不一致", "fix_zh": "重新调整线带张力与压纸轮压力。" },
-        { "likelihood": "low", "cause_zh": "纸堆码放不齐", "fix_zh": "重新撞齐上纸。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "飞达整体与主机不平行（安装或撞击后移位）",
+          "fix_zh": "校正飞达相对主机的平行度，并调节飞达两侧与走纸杆，使两侧送纸快慢一致——这是歪张的机械性根因。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "两侧分纸吸嘴高低不一致、两侧松纸吹风不对称",
+          "fix_zh": "逐侧复校吸嘴高度与吹风量。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "输纸带张力不均、压纸轮两侧压力不一致",
+          "fix_zh": "重新调整线带张力与压纸轮压力。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "纸堆码放不齐",
+          "fix_zh": "重新撞齐上纸。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-common-faults", "cnzhixiang-feeder-faults"]
+      "sources": [
+        "bisenet-common-faults",
+        "cnzhixiang-feeder-faults"
+      ]
     },
     {
       "id": "feeder-relocation-drift",
@@ -70,14 +161,30 @@
       "category": "feeder",
       "symptom_zh": "设备在原厂试机完好，运回后频繁卡纸、输纸不稳。",
       "field_fixable": "onsite",
-      "eta_minutes": [120, 240],
-      "machines": ["*"],
+      "eta_minutes": [
+        120,
+        240
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "飞达走纸组件在运输震动中整体偏移，吸嘴高度、前后间距、吸风平衡全部漂移", "fix_zh": "按手册基准对飞达全部参数做一次系统性复校，不要逐个救火式微调。" },
-        { "likelihood": "medium", "cause_zh": "新厂区温湿度与原厂差异导致纸张形变", "fix_zh": "车间控制在 18～25 ℃、相对湿度 60%～70%，纸张进厂后充分适应环境。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "飞达走纸组件在运输震动中整体偏移，吸嘴高度、前后间距、吸风平衡全部漂移",
+          "fix_zh": "按手册基准对飞达全部参数做一次系统性复校，不要逐个救火式微调。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "新厂区温湿度与原厂差异导致纸张形变",
+          "fix_zh": "车间控制在 18～25 ℃、相对湿度 60%～70%，纸张进厂后充分适应环境。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["zzyinji-relocation-jams", "bisenet-static"]
+      "sources": [
+        "zzyinji-relocation-jams",
+        "bisenet-static"
+      ]
     },
     {
       "id": "paper-static",
@@ -85,16 +192,39 @@
       "category": "feeder",
       "symptom_zh": "纸张互相吸附，分纸困难、定位不准、收纸散乱。",
       "field_fixable": "onsite",
-      "eta_minutes": [20, 60],
-      "machines": ["*"],
+      "eta_minutes": [
+        20,
+        60
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "车间干燥、纸张含水量低", "fix_zh": "纸张入库后充分调湿存放，车间温度 18～25 ℃、相对湿度 60%～70%；必要时车间加湿。" },
-        { "likelihood": "medium", "cause_zh": "高速摩擦起电", "fix_zh": "适当降低机速。" },
-        { "likelihood": "medium", "cause_zh": "缺少静电消除装置", "fix_zh": "在输纸板附近加装离子风棒/静电消除器。" },
-        { "likelihood": "low", "cause_zh": "纸张本身抗静电性差", "fix_zh": "使用抗静电剂。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "车间干燥、纸张含水量低",
+          "fix_zh": "纸张入库后充分调湿存放，车间温度 18～25 ℃、相对湿度 60%～70%；必要时车间加湿。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "高速摩擦起电",
+          "fix_zh": "适当降低机速。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "缺少静电消除装置",
+          "fix_zh": "在输纸板附近加装离子风棒/静电消除器。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "纸张本身抗静电性差",
+          "fix_zh": "使用抗静电剂。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-static"]
+      "sources": [
+        "bisenet-static"
+      ]
     },
     {
       "id": "register-front-lay-skew",
@@ -102,16 +232,40 @@
       "category": "register",
       "symptom_zh": "纸张到前规后左右定位不一致，套准漂移。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 90],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        90
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "上游歪张未解决", "fix_zh": "先按“下纸歪斜”条目排查飞达，再调前规。" },
-        { "likelihood": "medium", "cause_zh": "前规挡纸舌高度与纸厚不匹配", "fix_zh": "按纸厚重设通过间隙，具体数值以随机手册为准。" },
-        { "likelihood": "medium", "cause_zh": "前规压纸辊脏污或转动发涩", "fix_zh": "用海德堡认可的清洁剂清洁；清洁后仍发涩的应更换。" },
-        { "likelihood": "low", "cause_zh": "输纸台板脏污", "fix_zh": "用微湿抹布配合认可的清洁剂清洁台板。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "上游歪张未解决",
+          "fix_zh": "先按“下纸歪斜”条目排查飞达，再调前规。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "前规挡纸舌高度与纸厚不匹配",
+          "fix_zh": "按纸厚重设通过间隙，具体数值以随机手册为准。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "前规压纸辊脏污或转动发涩",
+          "fix_zh": "用海德堡认可的清洁剂清洁；清洁后仍发涩的应更换。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "输纸台板脏污",
+          "fix_zh": "用微湿抹布配合认可的清洁剂清洁台板。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["manualslib-sm102", "bisenet-common-faults"]
+      "sources": [
+        "manualslib-sm102",
+        "bisenet-common-faults"
+      ]
     },
     {
       "id": "register-side-lay",
@@ -119,16 +273,40 @@
       "category": "register",
       "symptom_zh": "轴向套准忽大忽小，侧规拉不到位或拉过头。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 90],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        90
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "侧规拉纸轮压力不当或磨损", "fix_zh": "按纸张重新调整拉纸轮压力，磨损件更换。" },
-        { "likelihood": "high", "cause_zh": "侧规定位面纸粉堆积", "fix_zh": "清洁定位面，纳入日常保养。" },
-        { "likelihood": "medium", "cause_zh": "拉规盖板与台面间隙过大，薄纸窜动", "fix_zh": "按纸厚重调盖板间隙。" },
-        { "likelihood": "low", "cause_zh": "侧规偏心套位置装错", "fix_zh": "拆下侧规重新调整偏心位置——装错时无论怎么调都拉不到位。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "侧规拉纸轮压力不当或磨损",
+          "fix_zh": "按纸张重新调整拉纸轮压力，磨损件更换。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "侧规定位面纸粉堆积",
+          "fix_zh": "清洁定位面，纳入日常保养。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "拉规盖板与台面间隙过大，薄纸窜动",
+          "fix_zh": "按纸厚重调盖板间隙。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "侧规偏心套位置装错",
+          "fix_zh": "拆下侧规重新调整偏心位置——装错时无论怎么调都拉不到位。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-common-faults", "sztcy-cd102"],
+      "sources": [
+        "bisenet-common-faults",
+        "sztcy-cd102"
+      ],
       "notes_zh": "CP2000 可在诊断中临时屏蔽边规到位报警用于诊断，生产前必须恢复，否则会放走大量废张。"
     },
     {
@@ -137,15 +315,36 @@
       "category": "transfer",
       "symptom_zh": "印品局部套不准并伴随重影，叼口处纸面被撕起。",
       "field_fixable": "parts_needed",
-      "eta_minutes": [60, 180],
-      "machines": ["*"],
+      "eta_minutes": [
+        60,
+        180
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "个别叼牙失去弹性或卡死不动作（死牙），叼纸力不足", "fix_zh": "逐个检查牙片开闭灵活性与叼力（用薄纸条逐牙做拉力测试，各牙手感应一致），更换失效的牙片、牙垫与弹簧。" },
-        { "likelihood": "high", "cause_zh": "牙垫、牙片磨损导致叼口打滑", "fix_zh": "磨损件成对更换后重新校牙。" },
-        { "likelihood": "medium", "cause_zh": "牙排之间交接关系失准", "fix_zh": "按手册规定的交接量重新校验，勿凭手感乱调。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "个别叼牙失去弹性或卡死不动作（死牙），叼纸力不足",
+          "fix_zh": "逐个检查牙片开闭灵活性与叼力（用薄纸条逐牙做拉力测试，各牙手感应一致），更换失效的牙片、牙垫与弹簧。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "牙垫、牙片磨损导致叼口打滑",
+          "fix_zh": "磨损件成对更换后重新校牙。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "牙排之间交接关系失准",
+          "fix_zh": "按手册规定的交接量重新校验，勿凭手感乱调。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-common-faults", "cnzhixiang-common-faults", "sohu-100-cases"]
+      "sources": [
+        "bisenet-common-faults",
+        "cnzhixiang-common-faults",
+        "sohu-100-cases"
+      ]
     },
     {
       "id": "transfer-swing-gripper",
@@ -153,14 +352,29 @@
       "category": "transfer",
       "symptom_zh": "交接瞬间纸张回弹、撕裂或起皱。",
       "field_fixable": "onsite",
-      "eta_minutes": [45, 120],
-      "machines": ["*"],
+      "eta_minutes": [
+        45,
+        120
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "摆动牙开牙量过小或开牙时机不对", "fix_zh": "点动机器至递纸牙运行到输纸台板交接位置，检查并调整开牙量与交接时机。" },
-        { "likelihood": "medium", "cause_zh": "牙片叼力不均", "fix_zh": "逐牙检查，参见“死牙”条目。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "摆动牙开牙量过小或开牙时机不对",
+          "fix_zh": "点动机器至递纸牙运行到输纸台板交接位置，检查并调整开牙量与交接时机。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "牙片叼力不均",
+          "fix_zh": "逐牙检查，参见“死牙”条目。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-common-faults"]
+      "sources": [
+        "bisenet-common-faults"
+      ]
     },
     {
       "id": "transfer-cam-roller",
@@ -168,13 +382,25 @@
       "category": "transfer",
       "symptom_zh": "交接处规律性起皱、破损。",
       "field_fixable": "parts_needed",
-      "eta_minutes": [120, 300],
-      "machines": ["*"],
+      "eta_minutes": [
+        120,
+        300
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "开牙滚子（凸轮随动轴承）磨损烂损", "fix_zh": "更换新件；应急时可按标准尺寸加工或选用国标轴承配作销轴代用。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "开牙滚子（凸轮随动轴承）磨损烂损",
+          "fix_zh": "更换新件；应急时可按标准尺寸加工或选用国标轴承配作销轴代用。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-common-faults", "cnzhixiang-common-faults"]
+      "sources": [
+        "bisenet-common-faults",
+        "cnzhixiang-common-faults"
+      ]
     },
     {
       "id": "quality-ink-bars",
@@ -182,16 +408,40 @@
       "category": "quality",
       "symptom_zh": "印品上出现平行于滚筒轴向的规律性条杠。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 120],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        120
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "靠版墨辊压力过大或滚枕（肩铁）脏污", "fix_zh": "按 3～4 mm 压杠标准重调辊压；每天清洁滚枕。" },
-        { "likelihood": "medium", "cause_zh": "齿轮间嵌入墨皮、纸毛等污物引起振动（随机性振杠）", "fix_zh": "清洗齿轮、检查润滑。" },
-        { "likelihood": "medium", "cause_zh": "滚筒齿轮精度差或磨损（等距粗杠，间距=齿距）", "fix_zh": "检查齿侧隙，必要时适当减小滚筒中心距或更换齿轮。" },
-        { "likelihood": "low", "cause_zh": "滚筒轴承磨损，合压瞬间冲击（叼口附近固定位置条杠）", "fix_zh": "更换轴承——需专业维修。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "靠版墨辊压力过大或滚枕（肩铁）脏污",
+          "fix_zh": "按 3～4 mm 压杠标准重调辊压；每天清洁滚枕。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "齿轮间嵌入墨皮、纸毛等污物引起振动（随机性振杠）",
+          "fix_zh": "清洗齿轮、检查润滑。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "滚筒齿轮精度差或磨损（等距粗杠，间距=齿距）",
+          "fix_zh": "检查齿侧隙，必要时适当减小滚筒中心距或更换齿轮。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "滚筒轴承磨损，合压瞬间冲击（叼口附近固定位置条杠）",
+          "fix_zh": "更换轴承——需专业维修。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["sohu-bars", "sina-roller-adjust"],
+      "sources": [
+        "sohu-bars",
+        "sina-roller-adjust"
+      ],
       "notes_zh": "先按“杠的规律”判断来源：等距=齿轮，叼口固定=轴承，随机=污物，宽窄不匀=辊压。"
     },
     {
@@ -200,14 +450,30 @@
       "category": "quality",
       "symptom_zh": "印品上出现发亮的浅色条杠，多见于叼口附近固定位置。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 90],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        90
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "靠版水辊与印版压力过重", "fix_zh": "重调水辊压力：先调水辊与串水辊（计量辊）间压力，再调水辊与版面压力；上下水辊都要调时先下后上，上辊压力略小于下辊。" },
-        { "likelihood": "medium", "cause_zh": "水辊绒套/胶辊表面不均或辊芯弯曲", "fix_zh": "检查辊体跳动，必要时更换。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "靠版水辊与印版压力过重",
+          "fix_zh": "重调水辊压力：先调水辊与串水辊（计量辊）间压力，再调水辊与版面压力；上下水辊都要调时先下后上，上辊压力略小于下辊。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "水辊绒套/胶辊表面不均或辊芯弯曲",
+          "fix_zh": "检查辊体跳动，必要时更换。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["sohu-bars", "bisenet-water-unit"],
+      "sources": [
+        "sohu-bars",
+        "bisenet-water-unit"
+      ],
       "notes_zh": "压力过轻会走向另一个极端——版面供水不足起脏，两头都要避免。"
     },
     {
@@ -216,17 +482,45 @@
       "category": "quality",
       "symptom_zh": "图文边缘或网点出现双重影像。",
       "field_fixable": "onsite",
-      "eta_minutes": [20, 90],
-      "machines": ["*"],
+      "eta_minutes": [
+        20,
+        90
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "橡皮布松动", "fix_zh": "按规定扭矩重新绷紧；新橡皮布印刷数百张后要复紧。" },
-        { "likelihood": "medium", "cause_zh": "包衬不当（过厚加大挤压滑移）", "fix_zh": "按机型规定的衬垫数据重新包衬。" },
-        { "likelihood": "medium", "cause_zh": "机组间交接不准、纵向微调机构松动", "fix_zh": "检查并调节纸张定位交接部件。" },
-        { "likelihood": "low", "cause_zh": "薄纸高速时纸尾拍打橡皮布", "fix_zh": "调整导纸风、适当降速。" },
-        { "likelihood": "low", "cause_zh": "滚筒轴承磨损", "fix_zh": "需专业维修。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "橡皮布松动",
+          "fix_zh": "按规定扭矩重新绷紧；新橡皮布印刷数百张后要复紧。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "包衬不当（过厚加大挤压滑移）",
+          "fix_zh": "按机型规定的衬垫数据重新包衬。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "机组间交接不准、纵向微调机构松动",
+          "fix_zh": "检查并调节纸张定位交接部件。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "薄纸高速时纸尾拍打橡皮布",
+          "fix_zh": "调整导纸风、适当降速。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "滚筒轴承磨损",
+          "fix_zh": "需专业维修。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["cnzhixiang-scuffing", "bisenet-common-faults"],
+      "sources": [
+        "cnzhixiang-scuffing",
+        "bisenet-common-faults"
+      ],
       "notes_zh": "局部重影且伴随套印不准的，优先回查“死牙”。"
     },
     {
@@ -235,17 +529,45 @@
       "category": "quality",
       "symptom_zh": "图文部分掉墨、空白部位起脏，印版远未达到应有印量即报废。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 120],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        120
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "版滚筒与橡皮滚筒压力过大，版面砂目磨平", "fix_zh": "按理想压力和正确包衬数据控制滚压——机械磨损是耐印力下降的主要根源。" },
-        { "likelihood": "high", "cause_zh": "润版液 pH 过低（过酸）或过高", "fix_zh": "PS 版润版液 pH 控制在 5.0～6.5 为宜，按药水供应商标准执行。" },
-        { "likelihood": "medium", "cause_zh": "纸粉、砂粒多的纸张磨版", "fix_zh": "勤洗橡皮布，必要时换纸。" },
-        { "likelihood": "medium", "cause_zh": "油墨粘度过高或用墨量过少", "fix_zh": "调整墨性与墨量。" },
-        { "likelihood": "low", "cause_zh": "滚筒轴套磨损使窜动量加大，水辊墨辊对版冲击增大", "fix_zh": "检修滚筒轴承——需专业维修。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "版滚筒与橡皮滚筒压力过大，版面砂目磨平",
+          "fix_zh": "按理想压力和正确包衬数据控制滚压——机械磨损是耐印力下降的主要根源。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "润版液 pH 过低（过酸）或过高",
+          "fix_zh": "PS 版润版液 pH 控制在 5.0～6.5 为宜，按药水供应商标准执行。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "纸粉、砂粒多的纸张磨版",
+          "fix_zh": "勤洗橡皮布，必要时换纸。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "油墨粘度过高或用墨量过少",
+          "fix_zh": "调整墨性与墨量。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "滚筒轴套磨损使窜动量加大，水辊墨辊对版冲击增大",
+          "fix_zh": "检修滚筒轴承——需专业维修。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-plate-life", "bisenet-ph-control"]
+      "sources": [
+        "bisenet-plate-life",
+        "bisenet-ph-control"
+      ]
     },
     {
       "id": "dampening-chiller",
@@ -253,18 +575,50 @@
       "category": "dampening",
       "symptom_zh": "循环水温高于设定值，酒精消耗异常快，版面水墨难平衡。",
       "field_fixable": "onsite",
-      "eta_minutes": [30, 120],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        120
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "压缩机散热器（冷凝器）表面积尘堆积", "fix_zh": "清理散热器表面——这是最常见原因。" },
-        { "likelihood": "high", "cause_zh": "冷却过滤器/管路堵塞", "fix_zh": "拆洗过滤器。" },
-        { "likelihood": "medium", "cause_zh": "显示屏温度设定值被误改", "fix_zh": "核对设定值，正常范围 8～15 ℃（常用 10～12 ℃）。" },
-        { "likelihood": "medium", "cause_zh": "制冷压缩机过电流保护开关跳开或高低压保护动作", "fix_zh": "检查保护开关状态并查明跳闸原因后复位。" },
-        { "likelihood": "medium", "cause_zh": "循环水泵不运转或流量不足", "fix_zh": "检查水泵——泵不转会同时引发版面供水不足报警。" },
-        { "likelihood": "low", "cause_zh": "制冷剂泄漏或压缩机本体故障", "fix_zh": "交制冷专业维修处理。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "压缩机散热器（冷凝器）表面积尘堆积",
+          "fix_zh": "清理散热器表面——这是最常见原因。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "冷却过滤器/管路堵塞",
+          "fix_zh": "拆洗过滤器。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "显示屏温度设定值被误改",
+          "fix_zh": "核对设定值，正常范围 8～15 ℃（常用 10～12 ℃）。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "制冷压缩机过电流保护开关跳开或高低压保护动作",
+          "fix_zh": "检查保护开关状态并查明跳闸原因后复位。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "循环水泵不运转或流量不足",
+          "fix_zh": "检查水泵——泵不转会同时引发版面供水不足报警。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "制冷剂泄漏或压缩机本体故障",
+          "fix_zh": "交制冷专业维修处理。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["ys2345-water-tank", "bisenet-fountain-solution"]
+      "sources": [
+        "ys2345-water-tank",
+        "bisenet-fountain-solution"
+      ]
     },
     {
       "id": "inking-roller-glazing",
@@ -272,16 +626,40 @@
       "category": "inking",
       "symptom_zh": "辊面光滑发亮，亲墨性下降，传墨不良，水墨平衡难控。",
       "field_fixable": "onsite",
-      "eta_minutes": [60, 180],
-      "machines": ["*"],
+      "eta_minutes": [
+        60,
+        180
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "油墨/润版液残留物（钙盐、纸粉、药水添加剂）在压力与热量下结晶积釉", "fix_zh": "用专用除钙除釉清洗膏深度清洗——普通洗车水洗不掉钙化层；轻度晶化可用浮石粉配合清洗剂手工打磨。" },
-        { "likelihood": "medium", "cause_zh": "长期使用劣质煤油/汽油/酒精清洗，加速老化釉化", "fix_zh": "改用合格清洗剂，洗车程序走完全程让刮墨板刮净。" },
-        { "likelihood": "medium", "cause_zh": "辊间压力过大，挤压发热", "fix_zh": "按标准重调辊压——压力过大会使胶辊膨胀脱壳直至报废。" },
-        { "likelihood": "low", "cause_zh": "辊面出现细小裂纹", "fix_zh": "及时研磨或更换。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "油墨/润版液残留物（钙盐、纸粉、药水添加剂）在压力与热量下结晶积釉",
+          "fix_zh": "用专用除钙除釉清洗膏深度清洗——普通洗车水洗不掉钙化层；轻度晶化可用浮石粉配合清洗剂手工打磨。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "长期使用劣质煤油/汽油/酒精清洗，加速老化釉化",
+          "fix_zh": "改用合格清洗剂，洗车程序走完全程让刮墨板刮净。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "辊间压力过大，挤压发热",
+          "fix_zh": "按标准重调辊压——压力过大会使胶辊膨胀脱壳直至报废。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "辊面出现细小裂纹",
+          "fix_zh": "及时研磨或更换。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["bisenet-roller-care", "cnzhixiang-common-faults"]
+      "sources": [
+        "bisenet-roller-care",
+        "cnzhixiang-common-faults"
+      ]
     },
     {
       "id": "delivery-uneven-stack",
@@ -289,18 +667,50 @@
       "category": "delivery",
       "symptom_zh": "收纸台纸张散乱，边缘参差。",
       "field_fixable": "parts_needed",
-      "eta_minutes": [30, 120],
-      "machines": ["*"],
+      "eta_minutes": [
+        30,
+        120
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "收纸减速吸鼓电机不转", "fix_zh": "修复或更换减速电机。" },
-        { "likelihood": "high", "cause_zh": "传动软轴断裂", "fix_zh": "更换软轴。" },
-        { "likelihood": "high", "cause_zh": "减速吸鼓胶圈（O 型密封圈）断裂或老化", "fix_zh": "更换；应急时可用尺寸相符的国产 O 型密封圈替代。" },
-        { "likelihood": "medium", "cause_zh": "齐纸器行程与时机设定不当", "fix_zh": "按纸张幅面重设前齐纸板与侧齐纸器。" },
-        { "likelihood": "medium", "cause_zh": "收纸吹风/真空减速风量与纸张不匹配", "fix_zh": "薄纸减风、厚纸加风。" },
-        { "likelihood": "low", "cause_zh": "纸张静电", "fix_zh": "见静电条目。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "收纸减速吸鼓电机不转",
+          "fix_zh": "修复或更换减速电机。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "传动软轴断裂",
+          "fix_zh": "更换软轴。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "减速吸鼓胶圈（O 型密封圈）断裂或老化",
+          "fix_zh": "更换；应急时可用尺寸相符的国产 O 型密封圈替代。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "齐纸器行程与时机设定不当",
+          "fix_zh": "按纸张幅面重设前齐纸板与侧齐纸器。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "收纸吹风/真空减速风量与纸张不匹配",
+          "fix_zh": "薄纸减风、厚纸加风。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "纸张静电",
+          "fix_zh": "见静电条目。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["cnzhixiang-common-faults", "sohu-100-cases"]
+      "sources": [
+        "cnzhixiang-common-faults",
+        "sohu-100-cases"
+      ]
     },
     {
       "id": "delivery-powder-blockage",
@@ -308,18 +718,197 @@
       "category": "delivery",
       "symptom_zh": "喷粉量不足或局部无粉，印品背面蹭脏。",
       "field_fixable": "onsite",
-      "eta_minutes": [20, 60],
-      "machines": ["*"],
+      "eta_minutes": [
+        20,
+        60
+      ],
+      "machines": [
+        "*"
+      ],
       "causes": [
-        { "likelihood": "high", "cause_zh": "喷粉嘴/喷粉管受潮结块堵塞", "fix_zh": "逐个疏通喷嘴与管路；粉仓防潮，每月彻底疏通一次。" },
-        { "likelihood": "high", "cause_zh": "粉筒滤网堵塞", "fix_zh": "清理滤网——属经常性维护项。" },
-        { "likelihood": "medium", "cause_zh": "喷粉气泵压力不足", "fix_zh": "检修气泵与气源压力。" },
-        { "likelihood": "medium", "cause_zh": "密封片垫损坏", "fix_zh": "更换片垫。" },
-        { "likelihood": "low", "cause_zh": "输粉胶管老化", "fix_zh": "更换胶管。" }
+        {
+          "likelihood": "high",
+          "cause_zh": "喷粉嘴/喷粉管受潮结块堵塞",
+          "fix_zh": "逐个疏通喷嘴与管路；粉仓防潮，每月彻底疏通一次。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "粉筒滤网堵塞",
+          "fix_zh": "清理滤网——属经常性维护项。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "喷粉气泵压力不足",
+          "fix_zh": "检修气泵与气源压力。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "密封片垫损坏",
+          "fix_zh": "更换片垫。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "输粉胶管老化",
+          "fix_zh": "更换胶管。"
+        }
       ],
       "confidence": "reported",
-      "sources": ["cnzhixiang-common-faults", "sohu-100-cases", "cnzhixiang-scuffing"],
+      "sources": [
+        "cnzhixiang-common-faults",
+        "sohu-100-cases",
+        "cnzhixiang-scuffing"
+      ],
       "notes_zh": "喷粉量过大会造成粉化（表面粗糙、影响覆膜上光），需找平衡点；同时配合降低收纸堆高度、勤下纸。"
+    },
+    {
+      "id": "quality-scumming",
+      "title_zh": "糊版、起脏（非图文部分上墨）",
+      "category": "quality",
+      "symptom_zh": "版面空白处带脏上墨，或图文网点糊死不清晰。",
+      "field_fixable": "onsite",
+      "eta_minutes": [
+        20,
+        90
+      ],
+      "machines": [
+        "*"
+      ],
+      "causes": [
+        {
+          "likelihood": "high",
+          "cause_zh": "油墨太稀或严重乳化",
+          "fix_zh": "墨斗内加原墨或更换油墨；检查润版液用量是否过大造成乳化。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "润版液失效，表面张力过大润湿不足",
+          "fix_zh": "检查 pH（4.8～5.5）、导电率（800～1500 μS/cm）与 IPA 浓度，必要时重新配液。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "靠版水辊或计量辊压力失当",
+          "fix_zh": "拆下计量辊用 0.1 mm 钢片重新校平两端压力；靠版辊压杠宽度调至 3～4 mm。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "墨辊与印版压力过大，磨版生热使网点扩大糊死",
+          "fix_zh": "按标准重调辊压。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "油墨抗水性差，乳化后颗粒吸附到版面空白区",
+          "fix_zh": "更换抗水性好的油墨。"
+        }
+      ],
+      "confidence": "reported",
+      "sources": [
+        "bisenet-water-unit",
+        "sina-roller-adjust",
+        "bisenet-fountain-solution"
+      ]
+    },
+    {
+      "id": "quality-set-off",
+      "title_zh": "背面蹭脏、粘脏",
+      "category": "quality",
+      "symptom_zh": "收纸后印张背面沾上前一张的墨迹。",
+      "field_fixable": "onsite",
+      "eta_minutes": [
+        15,
+        60
+      ],
+      "machines": [
+        "*"
+      ],
+      "causes": [
+        {
+          "likelihood": "high",
+          "cause_zh": "喷粉量不足或喷粉装置堵塞",
+          "fix_zh": "按喷粉条目疏通喷嘴与滤网；增大喷粉量并选对粒径。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "墨层过厚",
+          "fix_zh": "用着色力强的油墨降低墨层厚度。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "油墨渗透干燥性差、固化太慢",
+          "fix_zh": "加干燥剂或改用快固着油墨。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "收纸堆过高，底层压力大",
+          "fix_zh": "降低收纸堆高度、勤下纸、用隔纸板分垛。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "纸张表面吸收性差",
+          "fix_zh": "选用吸收性强的纸张。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "输纸线带、压纸轮脏污把墨迹蹭到下一张正面",
+          "fix_zh": "周保养清洗输纸线带，调整压纸轮压力。"
+        }
+      ],
+      "confidence": "reported",
+      "sources": [
+        "cnzhixiang-scuffing",
+        "zywl-setoff",
+        "cnzhixiang-maintenance"
+      ]
+    },
+    {
+      "id": "pneumatic-low-vacuum",
+      "title_zh": "气路真空度/压力不足",
+      "category": "pneumatic",
+      "symptom_zh": "吸嘴吸力弱、吹风无力，输纸时好时坏，或机器报气压不足拒绝启动。",
+      "field_fixable": "parts_needed",
+      "eta_minutes": [
+        30,
+        120
+      ],
+      "machines": [
+        "*"
+      ],
+      "causes": [
+        {
+          "likelihood": "high",
+          "cause_zh": "干式旋片泵碳精片（叶片）磨损",
+          "fix_zh": "按运行小时数更换碳精片——这是真空度下降的头号原因。"
+        },
+        {
+          "likelihood": "high",
+          "cause_zh": "进气滤芯、消音器堵塞",
+          "fix_zh": "定期清理或更换。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "管路老化破裂、接头松脱漏气",
+          "fix_zh": "听嘶嘶声、涂皂液查漏，分段夹管定位漏点。"
+        },
+        {
+          "likelihood": "medium",
+          "cause_zh": "旋转分气阀磨损或密封面拉伤，吸吹时序错乱",
+          "fix_zh": "研磨或更换分气阀。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "压力开关/传感器漂移导致误报气压不足",
+          "fix_zh": "用外接表校验后调整或更换。"
+        },
+        {
+          "likelihood": "low",
+          "cause_zh": "泵体过热",
+          "fix_zh": "检查散热与皮带张力。"
+        }
+      ],
+      "confidence": "reported",
+      "sources": [
+        "cnzhixiang-common-faults",
+        "sina-feeder-cases"
+      ]
     }
   ]
 }
