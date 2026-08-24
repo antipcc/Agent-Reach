@@ -48,6 +48,7 @@ class Validator:
         self.cases = load("cases.json")
         self.maintenance = load("maintenance.json")
         self.synonyms = load("synonyms.json")
+        self.submissions = load("submissions.json")
 
         self.source_ids = {s["id"] for s in self.sources["sources"]}
         self.machine_ids = {m["id"] for m in self.machines["machines"]}
@@ -284,6 +285,75 @@ class Validator:
         for orphan in sorted(entry_ids - reachable):
             self.warn("synonyms", f"条目 {orphan!r} 没有任何口语词可命中，问诊难以检索到")
 
+    def validate_submissions(self) -> None:
+        """校验投稿队列。两条硬规则：安全项不通过的投稿绝不能被采纳；
+        演示用样例绝不能并入知识库。"""
+        statuses = {s["id"] for s in self.submissions["statuses"]}
+        reasons = {r["id"] for r in self.submissions["reject_reasons"]}
+        checks = {c["id"] for c in self.submissions["review_checklist"]}
+        blocking = {c["id"] for c in self.submissions["review_checklist"] if c["blocking"]}
+        entry_ids = ({e["id"] for e in self.fault_codes["entries"]}
+                     | {e["id"] for e in self.cases["entries"]})
+        machine_by_id = {m["id"]: m for m in self.machines["machines"]}
+        seen: set[str] = set()
+
+        for sub in self.submissions["submissions"]:
+            sid = sub.get("id", "?")
+            where = f"submissions/{sid}"
+            if sid in seen:
+                self.err(where, "id 重复")
+            seen.add(sid)
+
+            status = sub.get("status")
+            if status not in statuses:
+                self.err(where, f"status 取值 {status!r} 未定义")
+            self.check_enum(where, sub, "category", self.category_ids)
+
+            inc = sub.get("incident", {})
+            machine = machine_by_id.get(inc.get("machine"))
+            if machine is None:
+                self.err(where, f"incident.machine 取值 {inc.get('machine')!r} 未在 machines.json 中定义")
+            elif inc.get("control_system") not in machine["control_systems"]:
+                self.err(where, f"世代错配：{machine['name']} 不使用 {inc.get('control_system')!r}")
+
+            review = sub.get("review")
+            if status in {"reviewing", "accepted", "merged", "rejected", "needs_info"}:
+                if not review:
+                    self.err(where, f"status 为 {status} 但缺少 review 记录")
+                    continue
+                for name in review.get("checklist", {}):
+                    if name not in checks:
+                        self.err(where, f"复核项 {name!r} 未在 review_checklist 中定义")
+
+                passed = review.get("checklist", {})
+                unsafe = passed.get("safety_ok") is False
+                if unsafe and status not in {"rejected"}:
+                    self.err(where, "安全项未通过的投稿只能是 rejected —— 这是一票否决项")
+                if status in {"accepted", "merged"}:
+                    for name in sorted(blocking):
+                        if not passed.get(name):
+                            self.err(where, f"阻断项 {name!r} 未通过，不能采纳")
+
+            if status == "rejected":
+                if sub.get("reject_reason") not in reasons:
+                    self.err(where, f"reject_reason 取值 {sub.get('reject_reason')!r} 未定义")
+
+            merged = sub.get("merged_into")
+            if status == "merged":
+                if not merged:
+                    self.err(where, "status 为 merged 但缺少 merged_into")
+                elif merged not in entry_ids:
+                    self.err(where, f"merged_into 指向不存在的条目 {merged!r}")
+                # 样例只用于演示流程，绝不能进入知识库
+                if sub.get("is_sample"):
+                    self.err(where, "样例投稿不得标记为 merged —— 演示数据禁止并入知识库")
+            elif merged:
+                self.err(where, f"status 为 {status} 却填了 merged_into")
+
+        samples = sum(1 for s in self.submissions["submissions"] if s.get("is_sample"))
+        if samples:
+            self.warn("submissions", f"队列中有 {samples} 条样例投稿（is_sample），仅用于演示审核流程")
+
     def validate_sources(self) -> None:
         seen: set[str] = set()
         for source in self.sources["sources"]:
@@ -321,6 +391,7 @@ class Validator:
         self.validate_cases()
         self.validate_maintenance()
         self.validate_synonyms()
+        self.validate_submissions()
 
         counts = {
             "故障码": len(self.fault_codes["entries"]),
@@ -329,6 +400,7 @@ class Validator:
             "保养项": len(self.maintenance["entries"]),
             "易损件": len(self.maintenance["wear_parts"]),
             "口语词": len(self.synonyms["terms"]),
+            "投稿": len(self.submissions["submissions"]),
             "来源": len(self.sources["sources"]),
             "机型": len(self.machines["machines"]),
         }

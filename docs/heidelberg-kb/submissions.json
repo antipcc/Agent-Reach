@@ -1,0 +1,366 @@
+{
+  "$comment": "案例投稿队列与审核规则。设计前提：机长的一手现场记录不是‘质量更差的网文’，而是另一类来源——只要它记下了可回访核对的细节（哪台机、什么时候、谁处理的、换了什么件、多久解决），它比任何二手转述都更可信。因此 provenance 与 confidence 是两个正交的轴。本文件中 is_sample=true 的条目是为演示审核流程而写的样例，不是真实投稿，validate.py 禁止它们并入知识库。",
+  "version": "1.0.0",
+  "updated": "2026-08-24",
+  "provenance_levels": [
+    {
+      "id": "compiled",
+      "name_zh": "资料汇编",
+      "desc_zh": "整理自公开网络资料或行业文章，来源为可点击链接。现有条目多属此类。"
+    },
+    {
+      "id": "field",
+      "name_zh": "现场记录",
+      "desc_zh": "投稿人亲自处理过的故障，来源为可回访核对的工单信息（机台、日期、处理人）。"
+    },
+    {
+      "id": "official",
+      "name_zh": "官方资料",
+      "desc_zh": "厂家手册、培训材料、官方服务通告。"
+    }
+  ],
+  "field_confidence_levels": [
+    {
+      "id": "field_single",
+      "name_zh": "单人现场报告",
+      "desc_zh": "1 位机长亲历并记录，细节可回访。方向可信，但未经他人复现。",
+      "maps_to": "reported"
+    },
+    {
+      "id": "field_corroborated",
+      "name_zh": "多人印证",
+      "desc_zh": "≥2 位互不相关的投稿人报告同一根因与做法，或经维修工程师复现确认。",
+      "maps_to": "verified"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "pending",
+      "name_zh": "待初审",
+      "desc_zh": "已提交，等待完整性初审。目标 1 个工作日内处理。"
+    },
+    {
+      "id": "needs_info",
+      "name_zh": "退回补充",
+      "desc_zh": "缺关键信息，已列明需要补什么，补齐后自动回到待初审。"
+    },
+    {
+      "id": "reviewing",
+      "name_zh": "技术复核",
+      "desc_zh": "信息齐全，由维修工程师核对根因与做法是否站得住。"
+    },
+    {
+      "id": "accepted",
+      "name_zh": "已采纳",
+      "desc_zh": "通过复核，待编辑并入正式条目。"
+    },
+    {
+      "id": "merged",
+      "name_zh": "已并入",
+      "desc_zh": "已成为知识库条目，merged_into 指向该条目 id。"
+    },
+    {
+      "id": "rejected",
+      "name_zh": "未采纳",
+      "desc_zh": "未通过，reject_reason 说明原因。安全类问题不可申诉。"
+    }
+  ],
+  "review_checklist": [
+    {
+      "id": "traceable",
+      "name_zh": "可追溯",
+      "ask_zh": "机型、控制系统、发生日期、处理人是否齐全？能否回访核对？",
+      "why_zh": "这是现场记录能替代网文出处的唯一理由。没有它，投稿就退化成又一条无出处的传言。",
+      "blocking": true
+    },
+    {
+      "id": "root_cause",
+      "name_zh": "有根因",
+      "ask_zh": "是否说清了为什么坏，而不只是‘换了个件就好了’？",
+      "why_zh": "换件记录只能帮到遇到同一台机器的人；根因才能帮到所有人。",
+      "blocking": true
+    },
+    {
+      "id": "actionable",
+      "name_zh": "有做法",
+      "ask_zh": "处理办法是否具体到部件、参数或工具？",
+      "why_zh": "‘调整一下压力’不是做法，‘用 0.1 mm 塞片校平两端’才是。",
+      "blocking": true
+    },
+    {
+      "id": "generation_ok",
+      "name_zh": "世代匹配",
+      "ask_zh": "声明的机型与控制系统是否真实对应？",
+      "why_zh": "由 validate.py 自动校验，人工只需复核机型填写是否属实。",
+      "blocking": true
+    },
+    {
+      "id": "safety_ok",
+      "name_zh": "无安全隐患",
+      "ask_zh": "做法中是否含短接、屏蔽安全开关或护罩检测，或其他可能致人受伤的操作？",
+      "why_zh": "一票否决且不可申诉。收录这类做法，等于用平台信誉为一次工伤背书。",
+      "blocking": true
+    },
+    {
+      "id": "original",
+      "name_zh": "非照搬",
+      "ask_zh": "‘你是怎么发现的’一栏是否写了真实的排查过程？",
+      "why_zh": "从书上或网文照搬既有版权风险，也无法回访核对。真实排查过程含有抄不来的细节——尤其是走过的弯路。",
+      "blocking": true
+    },
+    {
+      "id": "negative_results",
+      "name_zh": "有排除项",
+      "ask_zh": "是否记录了‘试过但没用’的做法？",
+      "why_zh": "不阻断采纳，但这是现场记录最值钱的部分：它替下一个人省掉同样的弯路，也是区分亲历与照搬的最好标志。",
+      "blocking": false
+    }
+  ],
+  "reject_reasons": [
+    {
+      "id": "unsafe",
+      "name_zh": "含不安全做法",
+      "appealable": false
+    },
+    {
+      "id": "not_traceable",
+      "name_zh": "无法回访核对",
+      "appealable": true
+    },
+    {
+      "id": "no_root_cause",
+      "name_zh": "只有换件记录，无根因",
+      "appealable": true
+    },
+    {
+      "id": "copied",
+      "name_zh": "疑似照搬书籍或网文",
+      "appealable": true
+    },
+    {
+      "id": "duplicate",
+      "name_zh": "与已有条目重复",
+      "appealable": true
+    },
+    {
+      "id": "out_of_scope",
+      "name_zh": "不属于海德堡单张纸胶印机范围",
+      "appealable": true
+    }
+  ],
+  "contributor_rewards": {
+    "$comment": "激励设计草案，具体额度由运营定，此处只固化原则。",
+    "principles_zh": [
+      "采纳即署名：条目上显示投稿人称号与工龄，不显示真实姓名与厂名（除非本人要求）。",
+      "按质量而非数量计酬：带‘试过但没用’与照片的投稿，积分翻倍。",
+      "被他人印证再加分：你的条目被第二个人独立印证时，双方都加分。",
+      "退回不扣分：退回补充是常态，只有安全类拒稿才计入信誉。"
+    ],
+    "tiers_zh": [
+      {
+        "name": "采纳 1 条",
+        "reward": "署名 + 1 个月会员"
+      },
+      {
+        "name": "采纳 5 条",
+        "reward": "年度会员 + 认证机长标识"
+      },
+      {
+        "name": "采纳 20 条",
+        "reward": "编委资格，可参与技术复核并获复核津贴"
+      }
+    ]
+  },
+  "submissions": [
+    {
+      "id": "sub-2026-0031",
+      "is_sample": true,
+      "status": "accepted",
+      "submitted_at": "2026-07-08",
+      "submitter": {
+        "handle": "示例投稿人 A",
+        "role": "机长",
+        "years": 16
+      },
+      "incident": {
+        "machine": "cd-102",
+        "control_system": "cp2000",
+        "occurred_at": "2026-07-05",
+        "downtime_minutes": 40,
+        "shift": "夜班"
+      },
+      "title_zh": "收纸区报“纸张未清空”但现场已清空",
+      "category": "delivery",
+      "symptom_zh": "收纸清空后机器仍报纸张未清空，无法启动。",
+      "tried_zh": [
+        "反复清理收纸台并复位报警，无效",
+        "重启控制台，报警依旧"
+      ],
+      "root_cause_zh": "收纸区检测电眼被喷粉与纸粉覆盖，一直判定有纸遮挡。",
+      "fix_zh": "清洁该电眼发射与接收面及反射板，复位后恢复正常；已纳入每周保养。",
+      "parts_used": [],
+      "field_fixable": "onsite",
+      "eta_minutes": [
+        15,
+        40
+      ],
+      "how_found_zh": "顺着报警指的区域逐个部件看过去，发现电眼镜面上一层白粉，擦干净就好了。",
+      "review": {
+        "reviewer": "示例复核人",
+        "reviewed_at": "2026-07-09",
+        "checklist": {
+          "traceable": true,
+          "root_cause": true,
+          "actionable": true,
+          "generation_ok": true,
+          "safety_ok": true,
+          "original": true,
+          "negative_results": true
+        },
+        "notes_zh": "与已收录的 cp2000-delivery-not-empty 指向同一根因，通过复核。下一步并入该条目作为现场印证，其置信度将由单一来源升为多来源——本条为流程演示样例，实际并未并入知识库，真实条目的置信度不会被样例改动。"
+      }
+    },
+    {
+      "id": "sub-2026-0044",
+      "is_sample": true,
+      "status": "needs_info",
+      "submitted_at": "2026-08-18",
+      "submitter": {
+        "handle": "示例投稿人 B",
+        "role": "助手",
+        "years": 3
+      },
+      "incident": {
+        "machine": "sm-102",
+        "control_system": "cp2000",
+        "occurred_at": "2026-08-17",
+        "downtime_minutes": 180,
+        "shift": "白班"
+      },
+      "title_zh": "第三组套不准，换了块板就好了",
+      "category": "register",
+      "symptom_zh": "第三组套印不准，调版位也压不住。",
+      "tried_zh": [],
+      "root_cause_zh": "换了电气柜里的一块板。",
+      "fix_zh": "换板。",
+      "parts_used": [
+        "不记得型号了"
+      ],
+      "field_fixable": "service_required",
+      "eta_minutes": [
+        120,
+        240
+      ],
+      "how_found_zh": "维修师傅换的。",
+      "review": {
+        "reviewer": "示例复核人",
+        "reviewed_at": "2026-08-19",
+        "checklist": {
+          "traceable": true,
+          "root_cause": false,
+          "actionable": false,
+          "generation_ok": true,
+          "safety_ok": true,
+          "original": true,
+          "negative_results": false
+        },
+        "notes_zh": "退回补充三项：①换的是哪块板（板号或槽位）；②换板前是否先排除过前规/侧规/叼牙等机械原因；③为什么判断是板坏而不是传感器。目前这条只能帮到同一台机器的人，补齐后可参照 cpf-sm74-register-bek 的 BEK 板案例收录。"
+      }
+    },
+    {
+      "id": "sub-2026-0047",
+      "is_sample": true,
+      "status": "rejected",
+      "submitted_at": "2026-08-20",
+      "submitter": {
+        "handle": "示例投稿人 C",
+        "role": "机长",
+        "years": 9
+      },
+      "incident": {
+        "machine": "sm-74",
+        "control_system": "cp2000",
+        "occurred_at": "2026-08-19",
+        "downtime_minutes": 20,
+        "shift": "夜班"
+      },
+      "title_zh": "护罩开关坏了不想等配件的应急办法",
+      "category": "safety",
+      "symptom_zh": "护罩行程开关损坏，机器判定护罩未关无法开机，配件要等两天。",
+      "tried_zh": [],
+      "root_cause_zh": "行程开关触点损坏。",
+      "fix_zh": "把开关两端短接让机器认为护罩已关，先把急件印完。",
+      "parts_used": [],
+      "field_fixable": "onsite",
+      "eta_minutes": [
+        10,
+        20
+      ],
+      "how_found_zh": "以前老师傅这么干过。",
+      "review": {
+        "reviewer": "示例复核人",
+        "reviewed_at": "2026-08-20",
+        "checklist": {
+          "traceable": true,
+          "root_cause": true,
+          "actionable": true,
+          "generation_ok": true,
+          "safety_ok": false,
+          "original": true,
+          "negative_results": false
+        },
+        "notes_zh": "安全项一票否决，不可申诉。短接护罩检测会让防护形同虚设，一旦有人在运转中接触滚筒区后果不可逆。已向投稿人回复：正确做法是联系厂家或专业维修商临时更换同规格开关，绝不能短接；等件期间该机组停用。本条不进入知识库，但作为反面教材记录在审核日志中。"
+      },
+      "reject_reason": "unsafe"
+    },
+    {
+      "id": "sub-2026-0051",
+      "is_sample": true,
+      "status": "reviewing",
+      "submitted_at": "2026-08-22",
+      "submitter": {
+        "handle": "示例投稿人 D",
+        "role": "维修工程师",
+        "years": 21
+      },
+      "incident": {
+        "machine": "cd-102",
+        "control_system": "cp2000",
+        "occurred_at": "2026-08-21",
+        "downtime_minutes": 260,
+        "shift": "白班"
+      },
+      "title_zh": "换季后连续三天首件套准漂移，中午后自愈",
+      "category": "register",
+      "symptom_zh": "早班开机首批活套准漂移明显，跑一两百张后逐渐稳定，中午以后正常。",
+      "tried_zh": [
+        "校前规侧规，当时准了但第二天早上又漂",
+        "换了一批新纸，问题照旧",
+        "查叼牙叼力，各牙一致，排除死牙"
+      ],
+      "root_cause_zh": "车间夜间停空调，早班开机时机身与纸张温度均低于生产温度，滚筒与纸张随升温同步变形；并非定位系统故障。",
+      "fix_zh": "夜间保持空调低负荷运行使车间温度波动控制在 3 ℃ 内，并把纸张提前一晚移入车间同温；改造后首件废张由平均 180 张降到 40 张以内。",
+      "parts_used": [],
+      "field_fixable": "onsite",
+      "eta_minutes": [
+        60,
+        120
+      ],
+      "how_found_zh": "把连续三天的首件废张数和车间温湿度记录画在一张表上，发现废张数和早班室温高度相关，才想到不是机器的问题。",
+      "review": {
+        "reviewer": "示例复核人",
+        "reviewed_at": "2026-08-23",
+        "checklist": {
+          "traceable": true,
+          "root_cause": true,
+          "actionable": true,
+          "generation_ok": true,
+          "safety_ok": true,
+          "original": true,
+          "negative_results": true
+        },
+        "notes_zh": "三条排除项写得扎实，根因与现有资料中‘纸张含水量与温度影响套准’的说法一致但更具体，且给出了可量化的改善结果。待与投稿人确认车间温湿度记录可否脱敏公开后采纳，拟新建案例并与 register-front-lay-skew 互相关联。"
+      }
+    }
+  ]
+}

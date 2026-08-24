@@ -45,12 +45,14 @@ def build_payload() -> dict[str, Any]:
     cases = load("cases.json")
     maintenance = load("maintenance.json")
     synonyms = load("synonyms.json")
+    submissions = load("submissions.json")
 
     for case in cases["entries"]:
         case["premium"] = case["id"] in PREMIUM_CASE_IDS
 
     return {
         "synonyms": synonyms,
+        "sub": submissions,
         "sources": {s["id"]: s for s in sources["sources"]},
         "machines": machines["machines"],
         "controlSystems": {c["id"]: c for c in machines["control_systems"]},
@@ -368,6 +370,43 @@ h3.sec{font-size:16px;margin:26px 0 8px;padding-top:16px;border-top:1px solid va
   padding:2px 8px;white-space:nowrap}
 .spk:hover{border-color:var(--accent)}
 .spk.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* ── 投稿 ───────────────────────────── */
+.fld{margin-bottom:12px}
+.fld label{display:block;font-size:13.5px;font-weight:600;margin-bottom:5px}
+.fh{display:block;font-size:12px;font-weight:400;color:var(--ink-3);margin-top:1px}
+.fld input,.fld textarea,.fld select{
+  width:100%;font:inherit;font-size:14.5px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:5px;padding:8px 11px;resize:vertical}
+.fld textarea{line-height:1.65}
+.fnote{font-size:12.5px;color:var(--ink-3);margin-top:5px;line-height:1.6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.ckl{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.ckrow{display:flex;gap:10px;padding:10px 13px;border-top:1px solid var(--line);font-size:13.5px}
+.ckrow:first-child{border-top:none}
+.ckrow .ci{flex:none;width:16px;font-weight:700;text-align:center}
+.ckrow.ok{background:var(--ok-bg)} .ckrow.ok .ci{color:var(--ok)}
+.ckrow.bad .ci{color:var(--ink-3)}
+.ckrow.warn .ci{color:var(--warn)}
+.cq{display:block;color:var(--ink-2);margin-top:1px}
+.cw{display:block;color:var(--ink-3);font-size:12.5px;margin-top:3px;line-height:1.6}
+.ckmini{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
+.ckmini span{font-size:11.5px;border:1px solid var(--line);border-radius:3px;padding:2px 7px}
+.ckmini .ok{color:var(--ok);border-color:var(--ok)}
+.ckmini .bad{color:var(--stop);border-color:var(--stop)}
+.subact{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.subact .primary{background:var(--accent);color:var(--accent-ink);font-size:14.5px;font-weight:600;
+  padding:10px 20px;border-radius:5px}
+.subact .primary:disabled{background:var(--surface-2);color:var(--ink-3);cursor:not-allowed}
+.subact .ghost{border:1px solid var(--line);border-radius:5px;padding:10px 18px;
+  font-size:14.5px;color:var(--ink-2)}
+.subact .ghost:hover{border-color:var(--accent);color:var(--accent)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:10px 0}
+.fstep{background:var(--surface);padding:11px 13px}
+.fname{font-size:13.5px;font-weight:700}
+.fdesc{font-size:12.5px;color:var(--ink-3);line-height:1.6;margin-top:2px}
 </style>
 
 <header>
@@ -403,6 +442,7 @@ const state = {
   chat: [],
   pending: false,
   voice: { listening: false, error: null, speaking: null, autoSpeak: false },
+  subMsg: "",
   cat: { codes: "all", cases: "all" },
   q: { codes: "", cases: "" },
   open: {},
@@ -1008,6 +1048,197 @@ function viewMaint() {
             esc(i.color_zh)}　${esc(D.intervals.find(v => v.id === i.interval).name_zh)}</span>`).join("")}</div></div>` : ""}`}`;
 }
 
+/* ── 投稿 ── */
+const F = {
+  handle: "", role: "机长", years: "", machine: "", csys: "", occurred: "", downtime: "",
+  title: "", category: "", symptom: "", tried: "", root: "", fix: "",
+  parts: "", fixable: "onsite", etaLo: "", etaHi: "", found: "", unsafe: false
+};
+
+function subChecks() {
+  const has = v => !!String(v || "").trim();
+  const long = (v, n) => String(v || "").trim().length >= n;
+  const m = machineById(F.machine);
+  return {
+    traceable: has(F.machine) && has(F.occurred) && has(F.handle),
+    root_cause: long(F.root, 12),
+    actionable: long(F.fix, 12),
+    generation_ok: !!m && (m.control_systems.length === 1 || has(F.csys)),
+    safety_ok: !F.unsafe,
+    original: long(F.found, 15),
+    negative_results: has(F.tried)
+  };
+}
+
+function buildSubmission() {
+  const m = machineById(F.machine);
+  return {
+    id: "sub-draft-" + new Date().toISOString().slice(0, 10).replace(/-/g, ""),
+    provenance: "field",
+    status: "pending",
+    submitted_at: new Date().toISOString().slice(0, 10),
+    submitter: { handle: F.handle.trim(), role: F.role, years: Number(F.years) || null },
+    incident: {
+      machine: F.machine,
+      control_system: m ? (m.control_systems.length === 1 ? m.control_systems[0] : F.csys) : null,
+      occurred_at: F.occurred,
+      downtime_minutes: Number(F.downtime) || null
+    },
+    title_zh: F.title.trim(),
+    category: F.category,
+    symptom_zh: F.symptom.trim(),
+    tried_zh: F.tried.split("\n").map(s => s.trim()).filter(Boolean),
+    root_cause_zh: F.root.trim(),
+    fix_zh: F.fix.trim(),
+    parts_used: F.parts.split(/[,，\n]/).map(s => s.trim()).filter(Boolean),
+    field_fixable: F.fixable,
+    eta_minutes: [Number(F.etaLo) || 0, Number(F.etaHi) || 0],
+    how_found_zh: F.found.trim(),
+    confidence_proposed: "field_single"
+  };
+}
+
+function viewSubmit() {
+  document.getElementById("notice").hidden = true;
+  const ck = subChecks();
+  const list = D.sub.review_checklist;
+  const blockingOk = list.filter(c => c.blocking).every(c => ck[c.id]);
+  const m = machineById(F.machine);
+
+  const field = (id, label, hint, val, type) => `<div class="fld">
+    <label for="f-${id}">${esc(label)}${hint ? `<span class="fh">${esc(hint)}</span>` : ""}</label>
+    ${type === "area"
+      ? `<textarea id="f-${id}" data-f="${id}" rows="3">${esc(val)}</textarea>`
+      : `<input id="f-${id}" data-f="${id}" type="${type || "text"}" value="${esc(val)}">`}</div>`;
+
+  return `<h2 class="q" style="margin-top:14px">投稿：一次真实的排故经历</h2>
+    <p class="qd">机长的一手记录不是“质量更差的网文”——只要写清了可回访核对的细节，它<b>比任何二手转述都可信</b>。
+    表单按审核标准组织，右侧的检查项会实时告诉你还差什么。</p>
+
+    <div class="lbl lat">谁 · 哪台机 · 什么时候</div>
+    <div class="grid2">
+      ${field("handle", "你的称号", "不需要真名", F.handle)}
+      ${field("years", "工龄（年）", "", F.years, "number")}
+    </div>
+    <div class="fld"><label for="f-machine">机型<span class="fh">决定这条经验适用于哪些机器</span></label>
+      <select id="f-machine" data-f="machine">
+        <option value="">— 请选择 —</option>
+        ${D.machines.map(x => `<option value="${x.id}" ${F.machine === x.id ? "selected" : ""}
+          >${esc(x.name)}</option>`).join("")}
+      </select>
+      ${m && m.control_systems.length === 1
+        ? `<div class="fnote">控制系统：${esc(D.controlSystems[m.control_systems[0]].name_zh)}（自动识别）</div>`
+        : ""}
+    </div>
+    ${m && m.control_systems.length > 1 ? `<div class="fld">
+      <label for="f-csys">控制系统<span class="fh">${esc(m.name)} 横跨两代，不同代的报警与板卡完全不同，必须指明</span></label>
+      <select id="f-csys" data-f="csys">
+        <option value="">— 请选择 —</option>
+        ${m.control_systems.map(c => `<option value="${c}" ${F.csys === c ? "selected" : ""}
+          >${esc(D.controlSystems[c].name_zh)}</option>`).join("")}
+      </select></div>` : ""}
+    <div class="grid2">
+      ${field("occurred", "发生日期", "", F.occurred, "date")}
+      ${field("downtime", "停机时长（分钟）", "", F.downtime, "number")}
+    </div>
+
+    <div class="lbl lat">出了什么事</div>
+    ${field("title", "一句话标题", "如：换季后首件套准漂移，中午自愈", F.title)}
+    <div class="fld"><label for="f-category">部位分类</label>
+      <select id="f-category" data-f="category">
+        <option value="">— 请选择 —</option>
+        ${[...D.paperPath, ...D.systemGroup].map(c => `<option value="${c}" ${
+          F.category === c ? "selected" : ""}>${esc(D.categories[c])}</option>`).join("")}
+      </select></div>
+    ${field("symptom", "现象描述", "机器当时什么表现", F.symptom, "area")}
+    ${field("tried", "试过但没用的", "一行一条。这是最值钱的部分——替下一个人省掉同样的弯路", F.tried, "area")}
+    ${field("root", "根本原因", "为什么坏，不是“换了个件就好了”", F.root, "area")}
+    ${field("fix", "怎么解决的", "具体到部件、参数或工具", F.fix, "area")}
+    ${field("found", "你是怎么发现的", "真实的排查过程，包括走过的弯路", F.found, "area")}
+
+    <div class="lbl lat">处理难度</div>
+    <div class="grid2">
+      <div class="fld"><label for="f-fixable">现场可否自行处理</label>
+        <select id="f-fixable" data-f="fixable">
+          ${Object.entries(D.fixableLevels).map(([k, v]) =>
+            `<option value="${k}" ${F.fixable === k ? "selected" : ""}>${esc(v.name_zh)}</option>`).join("")}
+        </select></div>
+      ${field("parts", "用到的备件", "逗号分隔，没有就留空", F.parts)}
+    </div>
+    <div class="grid2">
+      ${field("etaLo", "耗时下限（分钟）", "", F.etaLo, "number")}
+      ${field("etaHi", "耗时上限（分钟）", "", F.etaHi, "number")}
+    </div>
+
+    <label class="chk" style="margin-top:14px">
+      <input type="checkbox" data-f="unsafe" ${F.unsafe ? "checked" : ""}>
+      <span><span class="t">做法中包含短接或屏蔽安全装置</span>
+      <span class="d">如实勾选。勾上后本条将被自动拒收——收录这类做法等于用平台信誉为一次工伤背书。</span></span>
+    </label>
+
+    <div class="lbl lat" style="margin-top:20px">审核标准自检</div>
+    <div class="ckl">${list.map(c => `<div class="ckrow ${ck[c.id] ? "ok" : (c.blocking ? "bad" : "warn")}">
+      <span class="ci">${ck[c.id] ? "✓" : (c.blocking ? "○" : "–")}</span>
+      <span><b>${esc(c.name_zh)}</b>${c.blocking ? "" : "（不阻断）"}
+      <span class="cq">${esc(c.ask_zh)}</span>
+      <span class="cw">${esc(c.why_zh)}</span></span></div>`).join("")}</div>
+
+    ${F.unsafe ? `<div class="safety"><b class="lat">SAFETY · 一票否决</b>
+      含短接或屏蔽安全装置的做法不予收录，且不可申诉。正确路径是联系厂家或专业维修商更换同规格器件，
+      等件期间该机组停用。</div>` : ""}
+
+    <div class="subact">
+      <button class="primary" data-export-sub="1" ${blockingOk ? "" : "disabled"}
+        >${blockingOk ? "导出投稿 JSON" : "先补齐上面的阻断项"}</button>
+      <button data-clear-sub="1" class="ghost">清空</button>
+    </div>
+    <div class="fnote" id="sub-msg">${esc(state.subMsg ||
+      "导出的 JSON 可直接进入审核队列，由 validate.py 校验后并入知识库。真实产品应改为后端提交接口。")}</div>
+
+    <h3 class="sec">审核流程</h3>
+    <div class="flow">${D.sub.statuses.map(s => `<div class="fstep">
+      <div class="fname">${esc(s.name_zh)}</div><div class="fdesc">${esc(s.desc_zh)}</div></div>`).join("")}</div>
+
+    <h3 class="sec">审核队列（样例）</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin:0 0 10px">
+      以下 ${D.sub.submissions.length} 条为演示审核流程而写，<b>不是真实投稿，也不会并入知识库</b>——
+      校验器强制禁止样例被标记为已并入。</p>
+    ${D.sub.submissions.map(s => {
+      const st = D.sub.statuses.find(x => x.id === s.status);
+      const tone = { accepted: "ok", merged: "ok", rejected: "stop", needs_info: "warn", reviewing: "", pending: "" }[s.status] || "";
+      const rv = s.review || {};
+      return `<article class="card ${s.status === "rejected" ? "stop" : "info"}">
+        <button class="card-hd" data-open="s${esc(s.id)}" aria-expanded="${!!state.open["s" + s.id]}">
+          <div class="row1"><span class="code mono">${esc(s.id)}</span>
+            <span class="tag ${tone}">${esc(st ? st.name_zh : s.status)}</span></div>
+          <div class="ttl">${esc(s.title_zh)}</div>
+          <div class="meta"><span class="tag">${esc(D.categories[s.category])}</span>
+            <span class="tag">${esc((machineById(s.incident.machine) || {}).name || s.incident.machine)}</span>
+            <span class="eta mono">停机 ${s.incident.downtime_minutes} 分钟</span>
+            <span class="tag">${esc(s.submitter.handle)} · ${s.submitter.years}年</span></div>
+        </button>
+        ${state.open["s" + s.id] ? `<div class="body">
+          <div class="lbl lat">现象</div><p>${esc(s.symptom_zh)}</p>
+          ${s.tried_zh.length ? `<div class="lbl lat">试过但没用</div>
+            <ul class="steps">${s.tried_zh.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+          <div class="lbl lat">根因</div><p>${esc(s.root_cause_zh)}</p>
+          <div class="lbl lat">做法</div><p>${esc(s.fix_zh)}</p>
+          <div class="lbl lat">怎么发现的</div><p>${esc(s.how_found_zh)}</p>
+          ${rv.checklist ? `<div class="lbl lat">复核结果</div>
+            <div class="ckmini">${list.map(c => `<span class="${rv.checklist[c.id] ? "ok" : "bad"}"
+              >${rv.checklist[c.id] ? "✓" : "✗"} ${esc(c.name_zh)}</span>`).join("")}</div>` : ""}
+          ${rv.notes_zh ? `<div class="${s.status === "rejected" ? "safety" : "note"}">
+            ${s.status === "rejected" ? '<b class="lat">拒收理由</b>' : "<b>复核意见：</b>"}${esc(rv.notes_zh)}</div>` : ""}
+        </div>` : ""}
+      </article>`;
+    }).join("")}
+
+    <h3 class="sec">投稿激励</h3>
+    <ul class="steps">${D.sub.contributor_rewards.principles_zh.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+    <div class="grid2" style="margin-top:10px">${D.sub.contributor_rewards.tiers_zh.map(t =>
+      `<div class="rule"><h4>${esc(t.name)}</h4><p>${esc(t.reward)}</p></div>`).join("")}</div>`;
+}
+
 /* ── 关于 ── */
 function viewAbout() {
   document.getElementById("notice").hidden = true;
@@ -1058,8 +1289,54 @@ function viewAbout() {
 /* ── 渲染与事件 ── */
 const TABS = [
   ["chat", "问诊", viewChat], ["codes", "查码", viewCodes], ["diag", "引导", viewDiag],
-  ["cases", "案例", viewCases], ["maint", "保养", viewMaint], ["about", "关于", viewAbout]
+  ["cases", "案例", viewCases], ["maint", "保养", viewMaint], ["submit", "投稿", viewSubmit],
+  ["about", "关于", viewAbout]
 ];
+
+/* 导出投稿：downloads 能力拿不到时退回剪贴板，两条路都断了才提示手动复制 */
+async function exportSubmission() {
+  const payload = JSON.stringify(buildSubmission(), null, 2);
+  const filename = "投稿-" + (F.title.trim().slice(0, 20) || "案例") + ".json";
+  try {
+    const downloads = await window.claude.use("downloads");
+    if (downloads) {
+      await downloads.save({ filename: filename, data: payload });
+      state.subMsg = "已导出 " + filename + "，把它发给知识库维护者即可进入审核队列。";
+      render();
+      return;
+    }
+  } catch (err) {
+    const code = err && err.code;
+    if (code === "declined") { state.subMsg = "已取消导出。"; render(); return; }
+    if (code === "rate_limited") { state.subMsg = "刚刚有一个保存提示还没处理完，稍等再试。"; render(); return; }
+    // 其余错误码一律退回剪贴板
+  }
+  try {
+    await navigator.clipboard.writeText(payload);
+    state.subMsg = "本环境无法直接保存文件，已复制到剪贴板，粘贴到文本文件另存为 .json 即可。";
+  } catch (err2) {
+    state.subMsg = "本环境既不能保存也不能访问剪贴板。请手动誊写表单内容发给维护者。";
+  }
+  render();
+}
+
+function refreshChecks() {
+  const box = document.querySelector(".ckl");
+  if (!box) return;
+  const ck = subChecks();
+  const list = D.sub.review_checklist;
+  box.innerHTML = list.map(c => `<div class="ckrow ${ck[c.id] ? "ok" : (c.blocking ? "bad" : "warn")}">
+    <span class="ci">${ck[c.id] ? "✓" : (c.blocking ? "○" : "–")}</span>
+    <span><b>${esc(c.name_zh)}</b>${c.blocking ? "" : "（不阻断）"}
+    <span class="cq">${esc(c.ask_zh)}</span>
+    <span class="cw">${esc(c.why_zh)}</span></span></div>`).join("");
+  const btn = document.querySelector("[data-export-sub]");
+  if (btn) {
+    const ok = list.filter(c => c.blocking).every(c => ck[c.id]);
+    btn.disabled = !ok;
+    btn.textContent = ok ? "导出投稿 JSON" : "先补齐上面的阻断项";
+  }
+}
 
 function render() {
   document.getElementById("tabs").innerHTML = TABS.map(([id, name]) =>
@@ -1095,9 +1372,14 @@ function init() {
   });
 
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-tab],[data-cat],[data-open],[data-iv],[data-diag-cat],[data-diag-case],[data-diag-back],[data-unlock],[data-say],[data-clar],[data-clear-chat],[data-goto-case],[data-mic],[data-speak],[data-autospeak]");
+    const t = e.target.closest("[data-tab],[data-cat],[data-open],[data-iv],[data-diag-cat],[data-diag-case],[data-diag-back],[data-unlock],[data-say],[data-clar],[data-clear-chat],[data-goto-case],[data-mic],[data-speak],[data-autospeak],[data-export-sub],[data-clear-sub]");
     if (!t) return;
     const d = t.dataset;
+    if (d.exportSub) { state.subMsg = "正在准备导出…"; render(); exportSubmission(); return; }
+    if (d.clearSub) {
+      Object.keys(F).forEach(k => { F[k] = (k === "role") ? "机长" : (k === "fixable") ? "onsite" : (k === "unsafe") ? false : ""; });
+      state.subMsg = ""; render(); return;
+    }
     if (d.mic) { startVoice(); return; }
     if (d.speak) {
       const entry = [...D.cases, ...D.faultCodes].find(x => x.id === d.speak);
@@ -1142,13 +1424,31 @@ function init() {
   });
 
   document.addEventListener("change", e => {
-    const id = e.target.dataset && e.target.dataset.chk;
-    if (!id) return;
-    state.checked[id] = e.target.checked;
+    const ds = e.target.dataset || {};
+    if (ds.f) {
+      const el = e.target;
+      F[ds.f] = el.type === "checkbox" ? el.checked : el.value;
+      if (ds.f === "machine") F.csys = "";
+      // 只有影响联动显示的控件才整页重绘。文本框在此重绘会有真实后果：
+      // 用户从一个字段点向下一个字段时，change 先于 focus 触发，重绘会摧毁
+      // 即将获得焦点的元素，导致焦点丢失、首次按键落空。
+      if (el.tagName === "SELECT" || el.type === "checkbox") render();
+      else refreshChecks();
+      return;
+    }
+    if (!ds.chk) return;
+    state.checked[ds.chk] = e.target.checked;
     persist(); render();
   });
 
   document.addEventListener("input", e => {
+    const ds = e.target.dataset || {};
+    // 文本框逐字重绘会丢焦点，因此只更新自检清单和按钮状态
+    if (ds.f && e.target.tagName !== "SELECT" && e.target.type !== "checkbox") {
+      F[ds.f] = e.target.value;
+      refreshChecks();
+      return;
+    }
     const id = e.target.id;
     if (id !== "q-codes" && id !== "q-cases") return;
     const scope = id.slice(2);

@@ -2,7 +2,7 @@
 
 这是 [`docs/heidelberg-press-troubleshooting.md`](../heidelberg-press-troubleshooting.md) 的机读版本。文档给人看，这套 JSON 给程序看——小程序、H5、RAG 问答、Excel 导出都从这里取数。
 
-**当前规模**：故障码 19 条 · 解码规则 4 条 · 案例 21 条 · 保养项 24 条 · 易损件 8 项 · 口语词 46 条 · 来源 49 条 · 机型 13 款
+**当前规模**：故障码 19 条 · 解码规则 4 条 · 案例 21 条 · 保养项 24 条 · 易损件 8 项 · 口语词 46 条 · 投稿样例 4 条 · 来源 49 条 · 机型 13 款
 
 ```bash
 python docs/heidelberg-kb/validate.py    # 校验，退出码 0 = 通过
@@ -41,6 +41,7 @@ python docs/heidelberg-kb/validate.py    # 校验，退出码 0 = 通过
 | `cases.json` | 现场排故案例库 |
 | `maintenance.json` | 保养清单 + 易损件表 |
 | `synonyms.json` | 车间口语词表 + 澄清追问，问诊引擎的输入 |
+| `submissions.json` | 投稿队列、审核标准与流程状态机 |
 | `validate.py` | 校验器 |
 
 新增任何条目前先读 `machines.json`——所有枚举值都在那里定义，`categories` 和 `confidence_levels` 也在。
@@ -83,6 +84,35 @@ python docs/heidelberg-kb/validate.py    # 校验，退出码 0 = 通过
 **做 RAG**：每个条目连同 `sources` 一起入向量库，回答时把出处链接一并给出。这类内容的答案没有出处等于没有价值。
 
 **做保养打卡**：`maintenance.entries` 按 `interval` 分组即是点检清单，勾选状态存在业务库、不要写回本数据文件。
+
+---
+
+## 投稿与审核
+
+内容规模是这类知识库唯一真正的护城河，而扩内容最快的路是让老师傅投稿。`submissions.json` 定义了这条链路。
+
+### 一手记录是另一类来源，不是更差的来源
+
+`provenance` 与 `confidence` 是两个正交的轴。机长的现场记录（`provenance: field`）只要写清了**可回访核对的细节**——哪台机、什么时候、谁处理的、换了什么件、多久解决——就比任何二手转述都可信。对应的置信度另设两档：`field_single`（单人亲历，映射到 `reported`）与 `field_corroborated`（≥2 人独立印证或工程师复现，映射到 `verified`）。
+
+### 七项审核标准
+
+`review_checklist` 定义了采纳门槛，前六项为阻断项：**可追溯、有根因、有做法、世代匹配、无安全隐患、非照搬**；第七项**有排除项**（"试过但没用的"）不阻断采纳，但它是现场记录最值钱的部分——既替下一个人省掉同样的弯路，也是区分亲历与照搬最可靠的标志。
+
+其中两条由 `validate.py` 强制，不靠人自觉：
+
+- **安全项一票否决且不可申诉。** 含短接、屏蔽安全装置的做法，状态只能是 `rejected`；标成 `accepted`/`merged` 会直接报错。收录这类做法等于用平台信誉为一次工伤背书。
+- **样例投稿禁止并入知识库。** `is_sample: true` 的条目不得标记为 `merged`。写这条规则时它当场抓出了我自己的违规——一条虚构的现场记录被标成了"已并入"，去印证一条真实条目。用虚构记录抬高真实条目的置信度，本质上就是伪造来源。
+
+### 状态机
+
+`pending`（待初审）→ `needs_info`（退回补充）/ `reviewing`（技术复核）→ `accepted`（已采纳）→ `merged`（已并入），或 `rejected`（未采纳，附 `reject_reason`）。
+
+### 提交方式
+
+原型的「投稿」页把审核标准直接做成了表单：填写时右侧七项自检实时显示还差什么，阻断项没齐就无法导出。跨代机型（如 CD 102 同时存在 CP-tronic 与 CP2000 版本）会要求投稿人**指明是哪一代**——程序不猜。填完导出为 JSON（`downloads` 能力，不可用时退回剪贴板），发给维护者放入队列、跑一遍 `validate.py` 即可。
+
+真实产品应把导出换成后端提交接口，审核状态与投稿人信誉入库；本原型不含任何后端。
 
 ---
 
