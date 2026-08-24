@@ -1,0 +1,406 @@
+{
+  "$comment": "来源登记表。所有数据条目的 sources 字段必须引用此处的 id；validate.py 会校验引用可解析。",
+  "version": "1.0.0",
+  "updated": "2026-08-24",
+  "sources": [
+    {
+      "id": "pp-hak-102-8p",
+      "title": "Error code HAK in CPtronic of HEIDELBERG SPEEDMASTER 102 8-P",
+      "url": "https://printplanet.com/threads/error-code-hak-in-cptronic-of-heidelberg-speedmaster-102-8-p.17784/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "HAK 含义与槽位编号、十六进制自检码读法的主要出处"
+    },
+    {
+      "id": "pp-eak-ffdf",
+      "title": "Error code EAK 03, EAK 12 is FFDF",
+      "url": "https://printplanet.com/threads/error-code-eak-03-eak-12-is-ffdf.17834/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-hak-ltk",
+      "title": "Error Code at HAK and LTK",
+      "url": "https://www.colorprintingforum.com/threads/error-code-at-hak-and-ltk.9173/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-102fl-eak-hak",
+      "title": "Heidelberg 102FL Eak and Hak error",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-102fl-eak-and-hak-error.22748/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "EAK 为各机组开关检测卡、电气柜内最多 6 块的出处"
+    },
+    {
+      "id": "cpf-sm74-blt-con",
+      "title": "Heidelberg SM74 ErrorTTK and BLT con",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-sm74-errorttk-and-blt-con.21526/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-sm102-blt-active",
+      "title": "Heidelberg SM 102-5 CP2000 – Intermittent Controlled Stop Without Error / BLT Active H1 Yellow Goes OFF",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-sm-102-5-cp2000-intermittent-controlled-stop-without-error-blt-active-h1-yellow-goes-off.26112/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "BLT5/MSK3/SMM4/UVM3/KVT/TTK 板卡族、SMM4/BLT 回路元件失效案例"
+    },
+    {
+      "id": "cpf-sm74-register-bek",
+      "title": "SM74 with CP2000 Register Fault",
+      "url": "https://www.colorprintingforum.com/threads/sm74-with-cp2000-register-fault.13290/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "更换 BEK 板上失效 EPROM 解决套准故障的案例"
+    },
+    {
+      "id": "cpf-cp2000-comms-lost",
+      "title": "Heidelberg CP2000 communications with press lost",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-cp2000-communications-with-press-lost.7347/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-cp2000-computer-failure",
+      "title": "CP2000 computer failure",
+      "url": "https://www.colorprintingforum.com/threads/cp2000-computer-failure.16298/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-sm102-strange-errors",
+      "title": "Heidelberg SM 102 Strange Errors",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-sm-102-strange-errors.17352/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "pp-qm46-15-01",
+      "title": "Heidelberg QM46-1 Error 15-01",
+      "url": "https://printplanet.com/threads/heidelberg-qm46-1-error-15-01.10595/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "15-01 指向 MRK 主电机控制板"
+    },
+    {
+      "id": "pp-cd74-electrical",
+      "title": "Electrical Error CD-74",
+      "url": "https://printplanet.com/threads/electrical-error-cd-74.8050/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "主电机 SLT 功率输出单元、SVT 连接单元"
+    },
+    {
+      "id": "cpf-pm52-g10",
+      "title": "Printmaster 52 fault Code G-10",
+      "url": "https://www.colorprintingforum.com/threads/printmaster-52-fault-code-g-10.24193/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-pm52-2",
+      "title": "Pm52-2",
+      "url": "https://www.colorprintingforum.com/threads/pm52-2.13536/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "特殊功能 56 调出错误码、01-01/01-02 代码格式"
+    },
+    {
+      "id": "cpf-pm52-perfecting",
+      "title": "Heidelberg PM52-2 Perfecting Error",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-pm52-2-perfecting-error.17826/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "翻转换向时的 P2E / P21 / PO2 报错"
+    },
+    {
+      "id": "cpf-inpress-error",
+      "title": "Inpress center error",
+      "url": "https://www.colorprintingforum.com/threads/inpress-center-error.26080/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "XL 机型 Inpress / AutoRegister 通信故障排查"
+    },
+    {
+      "id": "cpf-m600-ssk",
+      "title": "HEIDELBERG M600 CP Tronic SSK board problems",
+      "url": "https://www.colorprintingforum.com/threads/heidelberg-m600-cp-tronic-ssk-board-problems.17397/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cpf-mo-z-codes",
+      "title": "I need error codes interpretation sheets for heidelberg mo-z, 1993 cp-tronic",
+      "url": "https://www.colorprintingforum.com/threads/i-need-error-codes-interpretation-sheets-for-heidelberg-mo-z-1993-cp-tronic.10134/",
+      "type": "forum",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "scribd-zsk2",
+      "title": "Heidelberg Error Codes Overview (ZSK2 Errors)",
+      "url": "https://www.scribd.com/document/599921986/ZSK2-Errors",
+      "type": "document",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "scribd-m600-cptronic",
+      "title": "Z51508-01 M600 CPTronic Troubleshooting Guide",
+      "url": "https://www.scribd.com/document/708699570/Z51508-01-M600-CPTronic-Troubleshooting-Guide-1",
+      "type": "document",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "manualslib-sm102",
+      "title": "HEIDELBERG Speedmaster SM 102 Manual",
+      "url": "https://www.manualslib.com/manual/2028000/Heidelberg-Speedmaster-Sm-102.html",
+      "type": "manual",
+      "lang": "en",
+      "accessed": "2026-08-24",
+      "note": "前规、输纸台板等部件的清洁与更换规定"
+    },
+    {
+      "id": "hdb-xl106-maint-l2",
+      "title": "Print Media Performance & Training Center — Speedmaster XL 105/106 Maintenance Level 2",
+      "url": "https://www.heidelberg.com/us/media/local_media/services___training_and_consulting/pdf/pmptc-class-maintenance-level-2-105-106.pdf",
+      "type": "official",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "hdb-press-control",
+      "title": "Press control systems for Speedmaster — HEIDELBERG",
+      "url": "https://www.heidelberg.com/global/en/print_and_packaging/products/offset_printing/press_control_systems/press_control_systems.jsp",
+      "type": "official",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "hdb-xl106",
+      "title": "Speedmaster XL 106 — HEIDELBERG",
+      "url": "https://www.heidelberg.com/global/en/print_and_packaging/products/offset_printing/format_70_x_100/speedmaster_xl_106/product_information_12/product_information_20.jsp",
+      "type": "official",
+      "lang": "en",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-common-faults",
+      "title": "海德堡胶印机常见故障正确排除及维修",
+      "url": "http://bisenet.com/article/200812/43233.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24",
+      "note": "死牙、剥皮、飞达平行度、开牙滚子等条目的出处"
+    },
+    {
+      "id": "bisenet-feeder-adjust",
+      "title": "必胜教你开机器（四）——正确调节飞达（海德堡部分2）",
+      "url": "http://bisenet.com/article/200412/9249.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-fountain-solution",
+      "title": "胶印质量控制——润版液的使用",
+      "url": "http://bisenet.com/article/200604/15673.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-ph-control",
+      "title": "印刷中润版液PH值的控制",
+      "url": "http://bisenet.com/article/201208/118112.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-plate-life",
+      "title": "导致印版耐印力降低的原因分析",
+      "url": "http://bisenet.com/article/200907/53453.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-roller-care",
+      "title": "四色印刷机墨辊的保养须知",
+      "url": "http://bisenet.com/article/201209/119032.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-static",
+      "title": "五种方法祛除印刷纸张静电现象",
+      "url": "http://bisenet.com/article/201209/119037.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-water-unit",
+      "title": "掌握调节胶印机输水机构，水墨平衡问题一扫空",
+      "url": "http://bisenet.com/article/201505/148799.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "bisenet-maintenance",
+      "title": "海德堡：规范操作和保养筑就增值之路",
+      "url": "http://bisenet.com/article/201101/92044.htm",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cnzhixiang-common-faults",
+      "title": "海德堡胶印机常见故障以及排除",
+      "url": "https://www.cnzhixiang.com/mobile/yinshua/jishu/3/11295.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cnzhixiang-maintenance",
+      "title": "海德堡胶印机日常维护保养项目",
+      "url": "https://www.cnzhixiang.com/yinshua/jishu/1/4694.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24",
+      "note": "黄/蓝/绿油嘴周期、日周月保养项目"
+    },
+    {
+      "id": "cnzhixiang-feeder-faults",
+      "title": "输纸机输纸故障的分析与排除",
+      "url": "https://www.cnzhixiang.com/mobile/yinshua/jishu/3/11067.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cnzhixiang-control-systems",
+      "title": "海德堡印刷机CPC控制系统、CP-tronic系统、CP2000系统",
+      "url": "http://www.cnzhixiang.com/yinshua/jishu/3/11757.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "cnzhixiang-scuffing",
+      "title": "胶印常见异常及对策：蹭脏、鬼影、拉毛等",
+      "url": "https://www.cnzhixiang.com/yinshua/jishu/1/1030.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "sohu-100-cases",
+      "title": "海德堡印刷机维修故障分析100例(1-50)",
+      "url": "https://www.sohu.com/a/276039654_466833",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "sohu-bars",
+      "title": "平版胶印印刷机“水杠”与“墨杠”清理大全",
+      "url": "https://www.sohu.com/a/135597004_466833",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "sohu-maintenance",
+      "title": "海德堡印刷机维护保养日常",
+      "url": "https://www.sohu.com/a/168526699_483583",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "sina-roller-adjust",
+      "title": "海德堡印刷机墨辊的调节",
+      "url": "https://blog.sina.com.cn/s/blog_bad1eca401019v41.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24",
+      "note": "靠版墨辊 3~4mm 压杠、0.1mm 塞片校压的出处"
+    },
+    {
+      "id": "sina-feeder-cases",
+      "title": "海德堡飞达常见故障实例",
+      "url": "https://blog.sina.com.cn/s/blog_c6874d660101d4mi.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "sztcy-cd102",
+      "title": "海德堡SM CD-102四色胶印机常见故障及排除方法",
+      "url": "https://www.sztcy.com/inews_201004063.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24",
+      "note": "吹气管位置开关移位导致安全检测报警并闷车的案例"
+    },
+    {
+      "id": "ys2345-water-tank",
+      "title": "海德堡印刷机水箱故障怎么办",
+      "url": "http://m.ys2345.com/ask/644.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "zzyinji-relocation-jams",
+      "title": "设备试机完好，运回厂区频繁卡纸的根源与解决办法",
+      "url": "https://www.zzyinji168.com/show-773.html",
+      "type": "article",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    },
+    {
+      "id": "tpzd-boards",
+      "title": "海德堡印刷机电路板维修（触摸屏 / IDEB 墨驱板 / KLM4 驱动板 / 维修案例）",
+      "url": "http://www.tpzd.com/case_view.asp?id=52",
+      "type": "vendor",
+      "lang": "zh",
+      "accessed": "2026-08-24",
+      "note": "第三方维修商公开的可修板卡清单，属商业信息，仅作参考"
+    },
+    {
+      "id": "czkywx-cp2000-ipc",
+      "title": "海德堡印刷机CP2000工控机电路板维修",
+      "url": "https://www.czkywx.com/dianlubanweixiu/51.html",
+      "type": "vendor",
+      "lang": "zh",
+      "accessed": "2026-08-24"
+    }
+  ]
+}

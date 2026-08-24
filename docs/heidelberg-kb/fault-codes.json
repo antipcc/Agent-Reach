@@ -1,0 +1,409 @@
+{
+  "$comment": "故障码表。收录纪律：只收能在公开一手来源（官方手册 / 论坛实帖 / 维修商公开案例）中定位的代码，宁缺毋滥。禁止为凑数量生成“风格相似”的代码——机长按图索骥查不到，是这类产品最快的失信方式。",
+  "version": "1.0.0",
+  "updated": "2026-08-24",
+  "entry_count": 19,
+
+  "decoding_rules": [
+    {
+      "id": "rule-cpt-module-slot",
+      "applies_to": ["cp-tronic"],
+      "title_zh": "CP-tronic 代码 = 板卡族缩写 + 电气柜槽位号",
+      "body_zh": "CP-tronic 的报错前缀对应电路板的功能族，紧跟的数字是该板在电气柜中的槽位编号（如 HAK-02、HAK-03、HAK-04）。因此同一个前缀在不同机器上可能指向不同数量的板卡——每台机的配置要以本机电气图为准。定位到槽位后，优先检查该板的供电、接插件，并用同族好板换槽对比，再判定板卡损坏。",
+      "confidence": "verified",
+      "sources": ["pp-hak-102-8p", "cpf-hak-ltk"]
+    },
+    {
+      "id": "rule-cpt-hex-selftest",
+      "applies_to": ["cp-tronic"],
+      "title_zh": "CP-tronic 自检结果的十六进制读法",
+      "body_zh": "自检结果以十六进制显示，每一位十六进制数字代表 4 项测试的结果位：F = 1111，表示这 4 项全部通过；0 表示故障或该位置无响应。因此 FFFF 表示全部 16 项测试通过。出现非 F 的位时，把该位展开成二进制即可定位到具体是哪几项测试未通过——例如 FFF5 展开末位 5 = 0101，说明该组 4 项测试中有 2 项异常。",
+      "confidence": "verified",
+      "sources": ["pp-hak-102-8p", "pp-eak-ffdf"]
+    },
+    {
+      "id": "rule-pm52-func56",
+      "applies_to": ["cp-tronic"],
+      "machines": ["pm-52"],
+      "title_zh": "Printmaster 52 用特殊功能 56 调出错误码",
+      "body_zh": "PM 52 的错误码不在主画面常驻，需通过激活特殊功能 56 调出。代码为「机组-项目」两段式：前两位是机组号（01 = 第一印刷机组），后两位是具体检测项。例如 01-01 对应第 1 机组输墨装置护罩 S4，01-02 对应第 1 机组版滚筒护罩 S3 或润湿装置 S3。",
+      "confidence": "reported",
+      "sources": ["cpf-pm52-2"]
+    },
+    {
+      "id": "rule-cp2000-plain-text",
+      "applies_to": ["cp2000", "prinect-press-center"],
+      "title_zh": "CP2000 及以后为明文报警，报的是“现象”不是“坏件”",
+      "body_zh": "CP2000 / Prinect Press Center 的报警是中文或英文明文描述加图标，描述的是系统检测到的现象，而非故障零件的名称。排查次序应为：先查对应的传感器与其接线、位置是否漂移，再查执行器，最后才怀疑板卡。服务/诊断菜单中可查看传感器实时状态、执行器单动测试与错误历史记录；排查间歇性故障时先抄录错误历史，按时间和班次找规律。",
+      "confidence": "reported",
+      "sources": ["cnzhixiang-control-systems", "sztcy-cd102"]
+    }
+  ],
+
+  "entries": [
+    {
+      "id": "cpt-hak",
+      "code": "HAK <槽位号>",
+      "example": "HAK 4",
+      "title_zh": "辅助驱动板故障（槽位号 = 该板在电气柜中的位置）",
+      "category": "electrical",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["sm-102", "cd-102", "sm-74", "mo", "m-600"],
+      "meaning_zh": "HAK 是辅助驱动（Hilfsantriebe）板卡族，控制机上的辅助驱动装置，一块 HAK 最多可管 6 路辅助驱动，因此各机配置数量不同。代码中的数字是槽位号，HAK 4 即第 4 槽位的那块板报错。",
+      "checks": [
+        "记录完整代码与其后的十六进制自检值，按十六进制读法定位到具体未通过的测试项。",
+        "断电后检查该槽位板卡的供电与所有接插件是否松动、氧化。",
+        "与同族其他槽位的 HAK 板互换位置，观察报错是否随板移动——随板走即板损，留在原槽即槽位/线束问题。",
+        "确认该 HAK 所管的辅助驱动装置本体（电机、限位）是否卡阻或短路，避免只换板不查负载。"
+      ],
+      "confidence": "verified",
+      "sources": ["pp-hak-102-8p", "cpf-hak-ltk", "cpf-102fl-eak-hak"],
+      "notes_zh": "换板前务必拍照记录跳线与地址开关设定；同型号板在不同槽位承担不同功能。"
+    },
+    {
+      "id": "cpt-eak",
+      "code": "EAK <槽位号>",
+      "example": "EAK 03 / EAK 12",
+      "title_zh": "机组开关检测卡报错",
+      "category": "electrical",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["sm-102", "cd-102", "sm-74", "mo"],
+      "meaning_zh": "EAK 是负责巡检各机组全部开关信号的检测卡。根据机型与配置，电气柜内最多可装 6 块 EAK 卡。EAK 报错通常意味着它所监视的某个开关信号异常，而不一定是卡本身坏。",
+      "checks": [
+        "读取该 EAK 后的十六进制自检值，展开定位到具体异常的检测位。",
+        "顺着该检测位对应的开关（护罩行程开关、位置开关等）现场逐个确认动作是否到位、有无移位或被纸粉卡住。",
+        "检查开关到 EAK 卡的线束有无断线、接插件松动。",
+        "以上均正常再考虑 EAK 卡本身，用换槽对比法验证。"
+      ],
+      "confidence": "verified",
+      "sources": ["pp-eak-ffdf", "cpf-102fl-eak-hak"],
+      "notes_zh": "EAK 报错最常见的真实根因是开关位置漂移，而不是板卡损坏——先查现场再拆电气柜。"
+    },
+    {
+      "id": "cpt-sek",
+      "code": "SEK",
+      "example": "主面板 SEK 符号闪烁",
+      "title_zh": "安全系统相关报警",
+      "category": "safety",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["sm-102", "cd-102", "sm-74"],
+      "meaning_zh": "CP-tronic 主面板上 SEK 符号闪烁指向安全回路相关的检测异常。",
+      "checks": [
+        "逐个复位并确认所有急停按钮已旋出。",
+        "检查各护罩是否完全关闭到位、行程开关动作是否可靠。",
+        "检查光电人体检测装置是否被纸粉、油污遮挡或位置移位。",
+        "确认安全继电器回路供电正常。"
+      ],
+      "confidence": "reported",
+      "sources": ["pp-hak-102-8p"],
+      "safety_zh": "严禁以短接、屏蔽安全开关的方式让机器“先跑起来”。安全回路只能修复，不能绕过。"
+    },
+    {
+      "id": "cpt-ltk",
+      "code": "LTK",
+      "example": "LTK 报错 / LTK500 板损坏",
+      "title_zh": "润版（水辊）控制板报错",
+      "category": "dampening",
+      "severity": "stop",
+      "control_systems": ["cp-tronic", "cp2000"],
+      "machines": ["sm-102", "cd-102", "sm-74", "sm-52"],
+      "meaning_zh": "LTK 板卡族与润版/水辊驱动相关，LTK500 是国内维修市场上出现频率很高的一块水斗电机控制板。典型表现为水辊电机不转或转速不跟随机速。",
+      "checks": [
+        "先确认水辊电机本体与测速反馈是否正常，排除电机堵转、绒套缠死。",
+        "检查板卡供电与接插件。",
+        "确认润版箱水泵与液位正常，避免把供水系统故障误判为控制板故障。",
+        "确认为板卡损坏后，可元件级维修或整板更换。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-hak-ltk", "tpzd-boards", "czkywx-cp2000-ipc"]
+    },
+    {
+      "id": "cpt-ssk",
+      "code": "SSK",
+      "example": "M600 CP Tronic SSK board",
+      "title_zh": "SSK 板卡故障（卷筒机 M-600）",
+      "category": "electrical",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["m-600"],
+      "meaning_zh": "SSK 是 M-600 卷筒机 CP-tronic 系统中的一块控制板，公开论坛有该板故障的讨论记录。",
+      "checks": [
+        "对照 M-600 CPTronic 排障手册（Z51508-01）中该板的诊断章节。",
+        "检查板卡供电与通讯接插件。",
+        "同族板换位对比验证。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-m600-ssk", "scribd-m600-cptronic"]
+    },
+    {
+      "id": "cpt-zsk",
+      "code": "ZSK",
+      "example": "ZSK2 错误表",
+      "title_zh": "ZSK 板卡族错误",
+      "category": "electrical",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["sm-102", "cd-102", "mo"],
+      "meaning_zh": "ZSK 是 CP-tronic 体系中的一个板卡族，公开流传有《Heidelberg Error Codes Overview（ZSK2 Errors）》对照文档，可按该文档逐位解读。",
+      "checks": [
+        "取得 ZSK2 错误对照文档，按代码逐条比对。",
+        "按板卡族 + 槽位规则定位到具体板卡。",
+        "先查供电与接插件，再换槽对比。"
+      ],
+      "confidence": "reported",
+      "sources": ["scribd-zsk2"]
+    },
+    {
+      "id": "cp2000-s-blt-con",
+      "code": "S-BLT CON",
+      "example": "S-BLT_CON",
+      "title_zh": "BLT 控制不就绪",
+      "category": "unit",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["sm-74", "sm-102", "cd-102"],
+      "meaning_zh": "CP2000 体系中 BLT 相关控制回路未进入就绪状态。公开案例指出两种典型情形：中央控制/CP2000 主动撤销了 BLT 使能信号，或 BLT 单元自身内部丢失了 READY/ACTIVE 状态。",
+      "checks": [
+        "检查各控制模块之间的通讯线缆有无破损、接插件松动——已有案例最终定位为一根损坏的通讯线。",
+        "检查 SMM4 / BLT 回路上的电子元件有无虚焊、脱落——已有案例为该回路上一个元件失效后修复解决。",
+        "观察报错是随机出现还是与某个动作（合压、离压、洗车）同步，据此缩小范围。",
+        "确认 BLT 单元的 READY/ACTIVE 指示状态，判断是被上位撤销还是自身丢失。"
+      ],
+      "confidence": "verified",
+      "sources": ["cpf-sm74-blt-con", "cpf-sm102-blt-active"],
+      "notes_zh": "CP2000 板卡族包含 BLT5 / MSK3 / SMM4 / UVM3 / KVT / TTK 等，排查时注意区分。本代码属 CP2000 世代，不适用于 XL 106 等 Prinect Press Center 机型。"
+    },
+    {
+      "id": "cp2000-dynamic-test",
+      "code": "动态测试标志（圆圈 T）",
+      "example": "屏幕出现圆圈 T 图标",
+      "title_zh": "动态测试检出电子板故障",
+      "category": "electrical",
+      "severity": "warning",
+      "control_systems": ["cp2000"],
+      "machines": ["sm-102", "cd-102", "sm-74", "cd-74", "sm-52"],
+      "meaning_zh": "CP2000 的动态测试（Dynamic Test）是持续监测电子板状态的机制，出现该标志说明测试过程中检出了某块板的异常，需进服务诊断菜单读出具体板卡位置。",
+      "checks": [
+        "进入服务/诊断菜单，读出报错指向的具体板卡与位置。",
+        "检查该板供电与接插件。",
+        "查看错误历史记录，确认是偶发还是持续。"
+      ],
+      "confidence": "reported",
+      "sources": ["cnzhixiang-control-systems", "cpf-sm102-strange-errors"]
+    },
+    {
+      "id": "cp2000-register-fault-bek",
+      "code": "套准故障（Register Fault）",
+      "example": "SM74 CP2000 报套准故障",
+      "title_zh": "CP2000 套准故障（含 BEK 板 EPROM 失效案例）",
+      "category": "register",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["sm-74", "sm-102", "cd-102"],
+      "meaning_zh": "CP2000 报套准相关故障。除机械与定位原因外，已有公开案例最终定位到电气柜内 BEK 板上的 EPROM 模块失效。",
+      "checks": [
+        "先排除机械与工艺原因：前规/侧规定位、叼牙死牙、纸张变形（见案例库对应条目）。",
+        "确认套准检测传感器清洁、位置未漂移。",
+        "机械与传感器均正常且报错持续时，检查 CP2000 电气柜内 BEK 板——已有案例通过更换该板上失效的 EPROM 模块解决。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-sm74-register-bek"],
+      "notes_zh": "顺序很重要：BEK 板 EPROM 是小概率的最终答案，绝大多数套准故障仍在机械与纸张一侧。"
+    },
+    {
+      "id": "cp2000-comms-lost",
+      "code": "与印刷机通讯丢失",
+      "example": "communications with press lost",
+      "title_zh": "控制台与机器通讯中断",
+      "category": "control",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["sm-102", "cd-102", "sm-74", "cd-74", "sm-52"],
+      "meaning_zh": "CP2000 控制台与机器本体之间的通讯链路中断，控制台无法读取或下达指令。",
+      "checks": [
+        "检查控制台与电气柜之间的通讯线缆及两端接插件。",
+        "检查网络/总线设备（交换机、终端电阻）供电与指示灯。",
+        "确认电气柜内相关通讯板卡供电正常。",
+        "按规程重启控制台一次，观察是否为软件性挂起。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-cp2000-comms-lost", "cpf-cp2000-computer-failure"]
+    },
+    {
+      "id": "cp2000-ipc-failure",
+      "code": "控制台黑屏 / 死机 / 触摸失灵",
+      "example": "CP2000 工控机无法进系统",
+      "title_zh": "CP2000 工控机与显示器硬件故障",
+      "category": "control",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["sm-102", "cd-102", "sm-74", "cd-74", "sm-52"],
+      "meaning_zh": "控制台不显示、无法进入系统、屏幕出线条或触摸无响应。国内第三方维修市场对 CP2000 工控机主板与触摸屏（如 CP.150.0338）有成熟的元件级维修能力。",
+      "checks": [
+        "先确认控制台供电与保险，排除外部供电问题。",
+        "区分是显示器故障还是工控机故障：接外部显示信号或观察开机自检有无输出。",
+        "检查板卡接插件是否松动、积尘。",
+        "确认为硬件损坏后送修或更换；送修前拍照记录接线与设定。"
+      ],
+      "confidence": "reported",
+      "sources": ["czkywx-cp2000-ipc", "tpzd-boards", "cpf-cp2000-computer-failure"],
+      "notes_zh": "CP-tronic 老机型另需注意：主机板依赖后备电池保存参数，电池低电报警要及时更换，否则断电后参数与预置数据丢失。"
+    },
+    {
+      "id": "cp2000-delivery-not-empty",
+      "code": "收纸处纸张未清空",
+      "example": "CD102-5 报收纸处纸张未清空",
+      "title_zh": "收纸区“纸张未清空”误报",
+      "category": "delivery",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["cd-102", "sm-102"],
+      "meaning_zh": "收纸区检测判定仍有纸张未清空而禁止启动。现场实际已清空时，多为该区域检测电眼脏污或位置漂移导致的误报。",
+      "checks": [
+        "先目视确认收纸区、链条牙排、导纸装置上确实无残留纸张或碎纸。",
+        "清洁收纸区检测电眼的发射与接收面（纸粉、喷粉堆积是主因）。",
+        "确认电眼位置未被碰移、反射板未脏污或移位。",
+        "以上均正常再查电眼放大器板与线路。"
+      ],
+      "confidence": "reported",
+      "sources": ["sztcy-cd102"]
+    },
+    {
+      "id": "cp2000-safety-main-drive-lock",
+      "code": "人体进入安全检测 / 主传动装置锁定",
+      "example": "CD-102 同时报“吹气管位置错误”后闷车",
+      "title_zh": "安全检测触发主传动锁定（含吹气管开关移位案例）",
+      "category": "safety",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["cd-102", "sm-102"],
+      "meaning_zh": "安全检测系统判定有异常并锁定主传动。公开案例：CD-102 运行中显示“人体进入安全检测对主传动装置的锁定”与“吹气管位置错误”，初期不影响运行，约十分钟后突然闷车并追加报出开关柜与可信度（Plausibility）检测故障，最终确认为吹气管位置检测开关移位导致的误触发，调整开关位置后恢复正常。",
+      "checks": [
+        "立即处理，不要因为“暂不影响运行”而继续生产——该案例即由此升级为闷车锁机。",
+        "检查报警所指部位的位置检测开关（如吹气管、护罩、导纸装置）是否被碰移、松动。",
+        "检查光电人体检测装置的清洁度与对准。",
+        "调整或更换移位的开关后，完整走一遍安全功能确认。"
+      ],
+      "confidence": "reported",
+      "sources": ["sztcy-cd102"],
+      "safety_zh": "安全类报警必须修复，严禁短接屏蔽。诊断期间临时屏蔽某些检测的，生产前必须全部恢复。"
+    },
+    {
+      "id": "cpt-qm46-15-01",
+      "code": "15-01",
+      "example": "QM46-1 Error 15-01",
+      "title_zh": "主电机控制板（MRK）相关报错",
+      "category": "drive",
+      "severity": "warning",
+      "control_systems": ["cp-tronic"],
+      "machines": ["qm-46"],
+      "meaning_zh": "公开讨论指出该代码与 MRK（主驱动电机控制板）相关，通常并不代表严重问题。",
+      "checks": [
+        "确认机器实际运行是否受影响，区分是提示性报错还是真实故障。",
+        "检查 MRK 板供电与接插件。",
+        "检查主电机测速/位置反馈信号与线束。"
+      ],
+      "confidence": "reported",
+      "sources": ["pp-qm46-15-01"]
+    },
+    {
+      "id": "pm52-g10",
+      "code": "G-10",
+      "example": "Printmaster 52 fault Code G-10",
+      "title_zh": "主电机自检未通过",
+      "category": "drive",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["pm-52"],
+      "meaning_zh": "该代码与主电机执行的一项自检测试相关。公开讨论中指出主电机编码器失效是这类问题的常见原因。",
+      "checks": [
+        "检查主电机编码器是否脏污——可用压缩空气吹净后以异丙醇（IPA）清洗，公开案例中此法有效。",
+        "检查编码器线束与接插件。",
+        "手动盘车确认主传动无机械卡阻。",
+        "以上无效再考虑编码器或主驱动控制板更换。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-pm52-g10"]
+    },
+    {
+      "id": "pm52-perfector-errors",
+      "code": "P2E / P21 / PO2",
+      "example": "PM52-2 单面转翻转切换时报出",
+      "title_zh": "翻转（Perfecting）换向相关报错",
+      "category": "transfer",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["pm-52"],
+      "meaning_zh": "PM52-2 在从单面印刷切换到翻转印刷的换向过程中报出的一组错误。",
+      "checks": [
+        "按规程完整执行一次换回单面印刷的换向程序，再重新换向——公开案例中此法可清除报错。",
+        "检查翻转装置的位置检测开关与机械定位是否到位。",
+        "确认换向操作的前置条件（机器位置、护罩状态）全部满足。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-pm52-perfecting"]
+    },
+    {
+      "id": "pm52-unit-guard-codes",
+      "code": "01-01 / 01-02（机组-项目两段码）",
+      "example": "01-01 = 第1机组输墨装置护罩 S4",
+      "title_zh": "机组护罩与装置检测码",
+      "category": "safety",
+      "severity": "stop",
+      "control_systems": ["cp-tronic"],
+      "machines": ["pm-52"],
+      "meaning_zh": "经特殊功能 56 调出的两段式代码，前两位为机组号，后两位为检测项。已知示例：01-01 对应第 1 机组输墨装置护罩 S4；01-02 对应第 1 机组版滚筒护罩 S3 或润湿装置 S3。",
+      "checks": [
+        "按机组号定位到具体印刷机组。",
+        "检查对应护罩是否关闭到位、行程开关（S3/S4）动作是否可靠。",
+        "检查开关线束与接插件。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-pm52-2"],
+      "notes_zh": "完整对照表需查本机随机资料；此处仅记录已公开确认的示例条目，其余项目请勿臆测。"
+    },
+    {
+      "id": "cd74-slt-svt",
+      "code": "SLT / SVT",
+      "example": "CD-74 主电机相关电气故障",
+      "title_zh": "主电机功率变换单元相关故障",
+      "category": "drive",
+      "severity": "stop",
+      "control_systems": ["cp2000"],
+      "machines": ["cd-74"],
+      "meaning_zh": "公开讨论指出，CD-74 等机型的主电机相关电气故障可能来自 SLT（功率变换器输出单元）或 SVT（功率变换器连接元件）。",
+      "checks": [
+        "检查三相进线与输出端子是否松动、有无短路放电痕迹。",
+        "测量驱动输出电压三相是否平衡。",
+        "检查电机绝缘。",
+        "确认功率单元故障后由专业人员更换；反复过流不可盲目复位强开。"
+      ],
+      "confidence": "reported",
+      "sources": ["pp-cd74-electrical"],
+      "safety_zh": "功率单元带高压，检修必须断电挂牌并等待母线电容泄放完毕。"
+    },
+    {
+      "id": "prinect-inpress-comm",
+      "code": "Inpress / AutoRegister 通信故障",
+      "example": "XL 机型报颜色测量系统通信失败",
+      "title_zh": "联机测量系统通信中断",
+      "category": "control",
+      "severity": "warning",
+      "control_systems": ["prinect-press-center"],
+      "machines": ["xl-106", "xl-105", "xl-75"],
+      "meaning_zh": "Prinect Inpress Control / AutoRegister 联机测量系统与控制系统之间通信失败，表现为无法自动测量与自动套准。",
+      "checks": [
+        "检查测量系统控制盒上的 LED 指示状态。",
+        "检查控制盒到交换机的网线与接插件。",
+        "确认联机测量控制计算机是否正常启动运行。",
+        "确认测量装置本体清洁、无遮挡。"
+      ],
+      "confidence": "reported",
+      "sources": ["cpf-inpress-error"],
+      "notes_zh": "这是少数确实属于 XL / Prinect 世代的报错条目——不要与 CP2000/CP-tronic 时代的板卡代码混列。"
+    }
+  ]
+}

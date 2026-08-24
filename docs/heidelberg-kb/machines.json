@@ -1,0 +1,170 @@
+{
+  "$comment": "机型与控制系统枚举。fault-codes / cases / maintenance 中的 machines[] 与 control_systems[] 只能取此处的 id，validate.py 强制校验——这是防止“把 CP2000 报警挂到 XL 106 上”这类跨代错配的结构性约束。",
+  "version": "1.0.0",
+  "updated": "2026-08-24",
+
+  "control_systems": [
+    {
+      "id": "cpc",
+      "name_zh": "CPC",
+      "name_en": "CPC",
+      "era": "1970s–1990s",
+      "desc_zh": "早期分体式墨量遥控系统，多见于 MO、KORD、老 SM 机型。",
+      "sources": ["cnzhixiang-control-systems"]
+    },
+    {
+      "id": "cp-tronic",
+      "name_zh": "CP-tronic",
+      "name_en": "CP-tronic (CPT)",
+      "era": "1990s–2000s",
+      "desc_zh": "模块化板卡 + 槽位编号的报错体系（HAK / EAK / SEK / LTK / SSK / ZSK 等），自检结果以十六进制显示。",
+      "sources": ["cnzhixiang-control-systems", "pp-hak-102-8p"]
+    },
+    {
+      "id": "cp2000",
+      "name_zh": "CP2000",
+      "name_en": "CP2000 Center",
+      "era": "2000s–2010s",
+      "desc_zh": "触摸屏明文报警 + 服务诊断菜单，板卡族含 BLT / MSK / SMM / UVM / KVT / TTK / BEK 等。",
+      "sources": ["cnzhixiang-control-systems", "cpf-sm102-blt-active"]
+    },
+    {
+      "id": "prinect-press-center",
+      "name_zh": "Prinect Press Center",
+      "name_en": "Prinect Press Center / Press Center XL",
+      "era": "2010s–至今",
+      "desc_zh": "XL 系列现役控制台（Press Center XL 2/3/4 + Wallscreen），与 Prinect 工作流联网。",
+      "sources": ["hdb-press-control", "hdb-xl106"]
+    }
+  ],
+
+  "machines": [
+    {
+      "id": "gto-52",
+      "name": "GTO 52",
+      "format_zh": "小幅面",
+      "control_systems": ["cpc"],
+      "note_zh": "机械式为主，报错依赖指示灯与机械检查。"
+    },
+    {
+      "id": "pm-52",
+      "name": "Printmaster PM 52",
+      "format_zh": "小幅面",
+      "control_systems": ["cp-tronic"],
+      "note_zh": "错误码经特殊功能 56 调出，格式为「机组-项目」两段码。",
+      "sources": ["cpf-pm52-2"]
+    },
+    {
+      "id": "qm-46",
+      "name": "Quickmaster QM 46",
+      "format_zh": "小幅面",
+      "control_systems": ["cp-tronic"],
+      "sources": ["pp-qm46-15-01"]
+    },
+    {
+      "id": "sm-52",
+      "name": "Speedmaster SM 52",
+      "format_zh": "小幅面",
+      "control_systems": ["cp-tronic", "cp2000"]
+    },
+    {
+      "id": "sm-74",
+      "name": "Speedmaster SM 74",
+      "format_zh": "对开以下",
+      "control_systems": ["cp-tronic", "cp2000"],
+      "sources": ["cpf-sm74-blt-con", "cpf-sm74-register-bek"]
+    },
+    {
+      "id": "cd-74",
+      "name": "Speedmaster CD 74",
+      "format_zh": "对开以下",
+      "control_systems": ["cp2000"],
+      "sources": ["pp-cd74-electrical"]
+    },
+    {
+      "id": "sm-102",
+      "name": "Speedmaster SM 102",
+      "format_zh": "对开",
+      "control_systems": ["cp-tronic", "cp2000"],
+      "sources": ["manualslib-sm102", "cpf-sm102-blt-active"]
+    },
+    {
+      "id": "cd-102",
+      "name": "Speedmaster CD 102",
+      "format_zh": "对开",
+      "control_systems": ["cp-tronic", "cp2000"],
+      "sources": ["sztcy-cd102"]
+    },
+    {
+      "id": "mo",
+      "name": "MO / MOZ",
+      "format_zh": "对开",
+      "control_systems": ["cpc", "cp-tronic"],
+      "sources": ["cpf-mo-z-codes"]
+    },
+    {
+      "id": "xl-75",
+      "name": "Speedmaster XL 75",
+      "format_zh": "对开以下",
+      "control_systems": ["prinect-press-center"]
+    },
+    {
+      "id": "xl-105",
+      "name": "Speedmaster XL 105",
+      "format_zh": "大对开",
+      "control_systems": ["cp2000", "prinect-press-center"],
+      "note_zh": "早期 XL 105 曾配 CP2000，后期改 Prinect Press Center；标注代码时必须区分。",
+      "sources": ["hdb-xl106-maint-l2"]
+    },
+    {
+      "id": "xl-106",
+      "name": "Speedmaster XL 106",
+      "format_zh": "大对开",
+      "control_systems": ["prinect-press-center"],
+      "note_zh": "现役机型，使用 Prinect Press Center，不使用 CP2000/CP-tronic——CP2000 或 CP Tronic 时代的板卡代码不适用于本机型。",
+      "sources": ["hdb-xl106", "hdb-xl106-maint-l2"]
+    },
+    {
+      "id": "m-600",
+      "name": "Web Press M-600",
+      "format_zh": "卷筒",
+      "control_systems": ["cp-tronic"],
+      "sources": ["scribd-m600-cptronic", "cpf-m600-ssk"]
+    }
+  ],
+
+  "categories": [
+    { "id": "feeder",     "name_zh": "飞达 / 输纸" },
+    { "id": "register",   "name_zh": "前规 / 拉规 / 套准" },
+    { "id": "transfer",   "name_zh": "递纸 / 交接" },
+    { "id": "unit",       "name_zh": "印刷机组 / 滚筒" },
+    { "id": "dampening",  "name_zh": "润版" },
+    { "id": "inking",     "name_zh": "输墨" },
+    { "id": "delivery",   "name_zh": "收纸 / 喷粉" },
+    { "id": "pneumatic",  "name_zh": "气路 / 真空" },
+    { "id": "drive",      "name_zh": "主传动 / 驱动" },
+    { "id": "electrical", "name_zh": "电气 / 板卡" },
+    { "id": "safety",     "name_zh": "安全回路" },
+    { "id": "control",    "name_zh": "控制台 / 通讯" },
+    { "id": "lubrication","name_zh": "润滑 / 温控" },
+    { "id": "quality",    "name_zh": "印刷质量" }
+  ],
+
+  "confidence_levels": [
+    {
+      "id": "verified",
+      "name_zh": "已核实",
+      "desc_zh": "代码/含义在官方手册或多个独立公开来源中一致出现，且来源可点击验证。"
+    },
+    {
+      "id": "reported",
+      "name_zh": "案例报告",
+      "desc_zh": "来自单一公开案例（论坛实帖、维修商案例、行业文章），方向可信但未经交叉验证，现场须自行确认。"
+    },
+    {
+      "id": "unverified",
+      "name_zh": "待核",
+      "desc_zh": "仅有二手转述、无法定位一手出处。禁止进入付费内容；仅作内部线索。"
+    }
+  ]
+}

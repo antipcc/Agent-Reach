@@ -1,0 +1,107 @@
+# 海德堡故障知识库 · 结构化数据层
+
+这是 [`docs/heidelberg-press-troubleshooting.md`](../heidelberg-press-troubleshooting.md) 的机读版本。文档给人看，这套 JSON 给程序看——小程序、H5、RAG 问答、Excel 导出都从这里取数。
+
+**当前规模**：故障码 19 条 · 解码规则 4 条 · 案例 18 条 · 保养项 24 条 · 易损件 8 项 · 来源 48 条 · 机型 13 款
+
+```bash
+python docs/heidelberg-kb/validate.py    # 校验，退出码 0 = 通过
+```
+
+校验器只依赖标准库，可脱离 Agent Reach 独立运行——这套数据将来大概率会整体迁到自己的仓库。
+
+---
+
+## 三条收录纪律
+
+这套数据的价值不在条目数量，而在**每一条都能追溯**。以下三条由 `validate.py` 强制执行，不是文档里的君子协定：
+
+**一、没有来源的条目不准进库。** 每个条目的 `sources` 必须引用 `sources.json` 中已登记的 id，引用不存在的 id 直接报错。宁可只有 19 条真的故障码，也不要 200 条"看起来很像"的。
+
+**二、故障码表禁止收录 `unverified` 条目。** 置信度分三档：`verified`（多个独立来源交叉印证）、`reported`（单一公开案例，方向可信但需现场确认）、`unverified`（仅二手转述、无法定位一手出处）。第三档只能作为内部线索，不得进入付费内容——机长按代码查不到东西，是这类产品最快的失信方式。
+
+**三、控制系统必须与机型的实际世代匹配。** `validate.py` 会交叉核对每个条目声明的 `control_systems` 和 `machines`：把 CP2000 时代的报警挂到 XL 106（实际用 Prinect Press Center）上会直接报错并中断校验。
+
+```
+[error] fault-codes/cp2000-s-blt-con: 世代错配：Speedmaster XL 106 不使用 cp2000
+        （其支持的控制系统为 ['prinect-press-center']）
+```
+
+这条规则是有来由的：市面上 AI 生成的同类产品最常见的硬伤，就是把 CP-tronic / CP2000 / Prinect 三代机器的报警混在一张表里挂给同一台机器。看着专业，实际一条都对不上。
+
+---
+
+## 文件结构
+
+| 文件 | 作用 |
+|---|---|
+| `sources.json` | 来源登记表。所有 `sources` 引用的唯一真值来源 |
+| `machines.json` | 机型、控制系统、故障分类、置信度的枚举定义 |
+| `fault-codes.json` | 故障码表 + 解码规则 |
+| `cases.json` | 现场排故案例库 |
+| `maintenance.json` | 保养清单 + 易损件表 |
+| `validate.py` | 校验器 |
+
+新增任何条目前先读 `machines.json`——所有枚举值都在那里定义，`categories` 和 `confidence_levels` 也在。
+
+## 字段说明
+
+### 通用字段
+
+- **`machines`**：机型 id 数组。取 `"*"` 表示与机型无关的通用机械/工艺问题（如静电、墨杠）。
+- **`control_systems`**：控制系统 id 数组。**只在条目确实与某代控制系统绑定时才填**——纯机械问题不要填，填了就会触发世代校验。
+- **`confidence`** / **`sources`**：见上文收录纪律。
+
+### `fault-codes.json`
+
+`decoding_rules` 是**读码规则**而非具体代码，比单条代码更有长期价值。目前 4 条：CP-tronic 的「板卡族缩写 + 槽位号」命名规则、十六进制自检码读法（`F` = 4 项全过，`FFFF` = 16 项全过）、PM 52 用特殊功能 56 调码、以及 CP2000 明文报警"报的是现象不是坏件"的排查次序。
+
+每条 `entries` 含 `severity`（`stop` / `warning` / `info`）与 `checks` 有序排查步骤；涉及高压或安全回路的条目带 `safety_zh` 警示。
+
+### `cases.json`
+
+两个字段直接服务于机长在停机瞬间的第一个决策——**我自己能不能搞定、要多久、要不要叫人**：
+
+- **`field_fixable`**：`onsite`（现场可排）/ `parts_needed`（需备件）/ `service_required`（需专业维修）
+- **`eta_minutes`**：`[下限, 上限]`
+
+`causes` 数组**必须按 `likelihood` 由高到低排列**，校验器会检查顺序。这是在数据结构层面固化"先查高概率项"的排查纪律——防止把小概率的板卡故障排在纸张受潮前面。每个原因都必须带 `fix_zh`，只说原因不给做法的条目不准进库。
+
+### `maintenance.json`
+
+按 `interval`（每班/日/周/月/季/年）组织。`lubrication_color_code` 单列了海德堡的油嘴颜色周期约定（黄=每周、蓝=每月、绿=每季）。`wear_parts` 是易损件表，每项说明"磨损后表现为什么故障"，把保养和排故两端接起来。
+
+---
+
+## 用这套数据做什么
+
+**做检索**：`fault-codes` 按 `code` 做前缀匹配，`cases` 按 `symptom_zh` + `causes[].cause_zh` 做全文检索，`machines` 与 `control_systems` 作为筛选维度。机型筛选应该是**第一层**入口——先让用户选自己的机器，再出内容。
+
+**做引导诊断**：`categories` 是决策树第一层，`cases[].causes` 按 likelihood 排好的顺序天然就是后续追问路径。
+
+**做 RAG**：每个条目连同 `sources` 一起入向量库，回答时把出处链接一并给出。这类内容的答案没有出处等于没有价值。
+
+**做保养打卡**：`maintenance.entries` 按 `interval` 分组即是点检清单，勾选状态存在业务库、不要写回本数据文件。
+
+---
+
+## 维护约定
+
+改数据后**必须跑一遍 `validate.py`**，通过后再提交。新增条目时：
+
+1. 先在 `sources.json` 登记来源（带 `accessed` 日期）
+2. 再写条目并引用来源 id
+3. 拿不准置信度就填 `reported`，不要为了好看填 `verified`
+4. 顶层 `entry_count` 要同步更新，校验器会核对
+
+数据文件顶层的 `$comment` 字段是给维护者的说明，程序读取时忽略即可。
+
+---
+
+## 免责声明
+
+本数据由公开网络资料汇编整理，仅供技术参考，**不构成对任何具体设备的维修指导**。所有参数（压力、间隙、温度、油品、扭矩）一律以本机随机《操作手册》《维修手册》为准。涉及安全回路、主传动、电气柜内部的作业应由受训人员执行。
+
+**严禁短接、屏蔽任何安全开关和护罩检测。**
+
+商标 Heidelberg、Speedmaster、Prinect、CP2000 等归海德堡印刷机械股份公司所有，本数据与该公司无隶属或授权关系。若将本数据用于商业产品，请自行完成原创化改写与版权合规审查。
