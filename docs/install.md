@@ -277,6 +277,23 @@ pip install linkedin-scraper-mcp
 >
 > 详见 https://github.com/stickerdaniel/linkedin-mcp-server
 
+**短信 / httpSMS (可选 — 读自己手机上的短信):**
+> "读短信需要把你自己的 Android 手机变成短信网关（httpSMS，MIT 开源）。三步：
+> ① 手机装 https://apk.httpsms.com/HttpSms.apk 并登录；② 授予短信权限、加入电池优化白名单；
+> ③ 在 https://httpsms.com/settings 复制 API Key 发给我。"
+
+```bash
+agent-reach configure httpsms-key <API_KEY>
+```
+
+> 自建实例（Docker，见上游 README）额外指一下 API 地址：
+> ```bash
+> agent-reach configure httpsms-api-base https://your-host/v1
+> ```
+>
+> **只读**：Agent Reach 只读短信会话，不发短信。发短信请自己调上游 `POST /v1/messages/send`。
+> 完整说明见 `agent_reach/guides/setup-httpsms.md`。
+
 ### Step 4: Final check
 
 Run `agent-reach doctor` one final time and report the results to your user.
@@ -315,6 +332,7 @@ If the user wants a different agent to handle it, let them choose.
 | `agent-reach configure twitter-cookies "..."` | Unlock Twitter search + posting |
 | `agent-reach configure proxy URL` | 保存代理地址（Agent 访问 Reddit/Twitter 等受限网络时读取它设置 HTTP_PROXY/HTTPS_PROXY，不是自动解锁开关） |
 | `agent-reach configure groq-key gsk_xxx` | Unlock Xiaoyuzhou podcast transcription |
+| `agent-reach configure httpsms-key KEY` | Unlock reading SMS from your own Android phone (httpSMS) |
 
 After installation, use upstream tools directly. See SKILL.md for the full command reference:
 

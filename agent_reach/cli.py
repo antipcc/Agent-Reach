@@ -82,7 +82,7 @@ def main():
     p_conf.add_argument("key", nargs="?", default=None,
                         choices=["proxy", "github-token", "groq-key", "openai-key",
                                  "twitter-cookies", "youtube-cookies",
-                                 "xhs-cookies"],
+                                 "xhs-cookies", "httpsms-key", "httpsms-api-base"],
                         help="What to configure (omit if using --from-browser)")
     p_conf.add_argument("value", nargs="*", help="The value(s) to set")
     p_conf.add_argument("--from-browser", metavar="BROWSER",
@@ -202,6 +202,7 @@ def _cmd_install(args):
         "bilibili":    _install_bili_deps,
         "opencli":     _install_opencli_deps,  # cross-channel backend, desktop only
         # xueqiu: cookie-only, no install step
+        # httpsms: API-key only, no install step
         # linkedin: manual setup, no auto-install
     }
     COOKIE_CHANNELS = {"twitter", "xueqiu", "bilibili"}
@@ -1108,6 +1109,32 @@ def _cmd_configure(args):
     elif args.key == "openai-key":
         config.set("openai_api_key", value)
         print(f"✅ OpenAI key configured!")
+
+    elif args.key == "httpsms-key":
+        config.set("httpsms_api_key", value)
+        print("✅ httpSMS API key configured!")
+        _report_httpsms_status(config)
+
+    elif args.key == "httpsms-api-base":
+        # 自建实例：https://your-host/v1（留着 /v1，上游的 basePath 就是它）
+        config.set("httpsms_api_base", value.rstrip("/"))
+        print(f"✅ httpSMS API base configured: {value.rstrip('/')}")
+        if config.get("httpsms_api_key"):
+            _report_httpsms_status(config)
+
+
+def _report_httpsms_status(config):
+    """Probe httpSMS right after configuring so the user sees it work (or not)."""
+    from agent_reach.channels.httpsms import HttpSMSChannel
+
+    print("Testing httpSMS access...", end=" ")
+    try:
+        status, message = HttpSMSChannel().check(config)
+    except Exception as e:  # noqa: BLE001 — configure must never crash on a probe
+        print(f"[X] Failed: {e}")
+        return
+    prefix = {"ok": "✅", "warn": "[!]", "off": "[X]", "error": "[X]"}.get(status, "[?]")
+    print(f"{prefix} {message}")
 
 
 def _cmd_transcribe(args):
