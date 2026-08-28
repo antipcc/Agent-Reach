@@ -6,6 +6,31 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.6.0] - 2026-08-28
+
+### 🆕 New Channels / 新增渠道
+
+#### 📱 httpSMS (短信)
+
+- Read SMS on your own Android phone through [httpSMS](https://github.com/NdoleStudio/httpsms)
+  (MIT, self-hostable): gateway phone numbers, threads, per-contact messages, keyword filter
+  inside a thread (verification codes)
+- `list_phones()`, `list_threads(owner)`, `get_messages(contact, owner, query)`,
+  `get_message(id)`, `search(query, owner, contact)`
+- **Read-only by design** — sending SMS is a write operation and stays out of Agent Reach;
+  call the upstream `POST /v1/messages/send` directly if you need it
+- Config: `agent-reach configure httpsms-key <API_KEY>`; self-hosted instances point
+  `httpsms-api-base` at their own `/v1` root
+- 用自己的 Android 手机当短信网关，读网关手机号、会话列表、某个联系人的短信往来，
+  会话内可按关键词过滤（找验证码）；只读，不发短信
+
+### 📈 Improvements / 改进
+
+- Channel count: 13 → 14
+- 渠道数量：13 → 14
+
+---
+
 ## [1.3.1] - 2026-03-27
 
 ### 🐛 Bug Fixes / 修复

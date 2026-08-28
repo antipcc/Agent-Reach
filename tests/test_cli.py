@@ -148,7 +148,7 @@ class TestCheckUpdateRetry:
 
         sequence = [
             R(429, headers={"Retry-After": "3"}),
-            R(200, payload={"tag_name": "v1.5.0"}),
+            R(200, payload={"tag_name": "v1.6.0"}),
         ]
 
         with patch("requests.get", side_effect=sequence):
@@ -187,18 +187,18 @@ class TestCheckUpdateRetry:
 
 class TestVersionCompare:
     def test_newer_remote_triggers_update(self):
-        assert cli._is_newer_version("1.5.0", "1.4.2") is True
+        assert cli._is_newer_version("1.6.0", "1.5.0") is True
 
     def test_equal_versions_no_update(self):
-        assert cli._is_newer_version("1.5.0", "1.5.0") is False
+        assert cli._is_newer_version("1.6.0", "1.6.0") is False
 
     def test_local_ahead_of_release_no_downgrade_prompt(self):
         """发版窗口期本地装了 main(更新)时,不能提示"有更新"诱导降级。"""
-        assert cli._is_newer_version("1.4.2", "1.5.0") is False
+        assert cli._is_newer_version("1.5.0", "1.6.0") is False
 
     def test_unparseable_falls_back_to_inequality(self):
-        assert cli._is_newer_version("2026.06-beta", "1.5.0") is True
-        assert cli._is_newer_version("1.5.0", "1.5.0-dev") is True
+        assert cli._is_newer_version("2026.06-beta", "1.6.0") is True
+        assert cli._is_newer_version("1.6.0", "1.6.0-dev") is True
 
 
 class TestWatchVersionCompare:
@@ -210,7 +210,7 @@ class TestWatchVersionCompare:
 
             @staticmethod
             def json():
-                return {"tag_name": "v1.4.2", "body": ""}
+                return {"tag_name": "v1.5.0", "body": ""}
 
         monkeypatch.setattr(cli, "_github_get_with_retry", lambda *a, **k: (R(), None, 1))
         monkeypatch.setattr(
